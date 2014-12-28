@@ -1,4 +1,4 @@
-package hamsterFullscreen;
+package br.com.hamsterpellet.fullscreen;
 
 
 import java.awt.Graphics2D;

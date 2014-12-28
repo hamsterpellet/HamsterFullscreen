@@ -1,3 +1,4 @@
+package br.com.hamsterpellet.boxreflex;
 import java.awt.Point;
 import java.util.HashSet;
 

@@ -1,7 +1,5 @@
+package br.com.hamsterpellet.boxreflex;
 
-
-import hamsterFullscreen.GamePanel;
-import hamsterFullscreen.UserEventHandler;
 
 import java.awt.Color;
 import java.awt.Graphics2D;
@@ -9,6 +7,9 @@ import java.awt.Point;
 import java.awt.event.KeyEvent;
 
 import javax.swing.JOptionPane;
+
+import br.com.hamsterpellet.fullscreen.GamePanel;
+import br.com.hamsterpellet.fullscreen.UserEventHandler;
 
 public class MyUserEventHandler extends UserEventHandler {
 

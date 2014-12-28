@@ -1,12 +1,13 @@
+package br.com.hamsterpellet.boxreflex;
 
-
-import hamsterFullscreen.ScreenColoredCursoredRect;
-import hamsterFullscreen.ScreenPage;
-import hamsterFullscreen.ScreenRect;
-import hamsterFullscreen.UserEventHandler.Debugger;
 
 import java.awt.Color;
 import java.util.HashSet;
+
+import br.com.hamsterpellet.fullscreen.ScreenColoredCursoredRect;
+import br.com.hamsterpellet.fullscreen.ScreenPage;
+import br.com.hamsterpellet.fullscreen.ScreenRect;
+import br.com.hamsterpellet.fullscreen.UserEventHandler.Debugger;
 
 public class Game {
 
