@@ -162,7 +162,7 @@ public abstract class UserEventHandler {
 			if (mouseLoc == null) {
 				mouseLoc = new Point(getScreenWidth() / 2, getScreenHeight() / 2);
 			}
-			currentPage.registerHover(mouseLoc, null, gamePanel);
+			currentPage.registerHover(mouseLoc, null);
 		}
 		debugger.clear(0);
 	}
@@ -170,7 +170,7 @@ public abstract class UserEventHandler {
 		onUpdate();
 	}
 	protected final void _onRender(final Graphics2D g) {
-		currentPage.paintAllRects(g);
+		currentPage.paint(g);
 		debugger.onRender(g);
 		onRender(g);
 	}
@@ -227,7 +227,7 @@ public abstract class UserEventHandler {
 	protected final boolean _onMouseLeftButtonReleased(final Point mouseLoc) {
 		debugger.addMessage("onMouseLeftButtonReleased(Point(" + mouseLoc.x + ", " + mouseLoc.y + "))", 0);
 		boolean b = onMouseLeftButtonReleased(mouseLoc);
-		currentPage.registerMouseReleased(mouseLoc);
+		currentPage.registerMouseUp(mouseLoc);
 		debugger.clear(0);
 		return b;
 	}
@@ -270,7 +270,7 @@ public abstract class UserEventHandler {
 	protected final void _onMouseMoved(final Point mouseCurrentLoc, final Point mouseLastLoc, double distance, boolean dragged) {
 		debugger.addMessage("onMouseMoved(Point(" + mouseCurrentLoc.x + ", " + mouseCurrentLoc.y + "), Point(" +
 				mouseLastLoc.x + ", " + mouseLastLoc.y + "), " + distance + ", " + dragged + ")", 0);
-		currentPage.registerHover(mouseCurrentLoc, mouseLastLoc, getGamePanel());
+		currentPage.registerHover(mouseCurrentLoc, getGamePanel());
 		onMouseMoved(mouseCurrentLoc, mouseLastLoc, distance, dragged);
 		debugger.clear(0);
 	}

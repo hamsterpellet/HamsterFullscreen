@@ -9,14 +9,86 @@ import java.net.URL;
 
 import javax.imageio.ImageIO;
 
+import br.com.hamsterpellet.fullscreen.ScreenPage.MouseStatus;
+
 public class ScreenImageRect extends ScreenColoredCursoredRect {
 	
 	public static final String baseURL = "file:///E:/Programming/Java/EclipseADTWorkspace/Saturamini";
 	
-	protected ScreenImageRect(int screenWidth, int screenHeight, int width, int height) {
-		super(screenWidth, screenHeight, width, height);
+	public static final String hoverSuffix = "_hover";
+	public static final String pressSuffix = "_press";
+	
+	public static final String addSuffix(String string, String suffix) {
+		int dotPos = string.lastIndexOf(".");
+		if (dotPos == -1) return string + suffix;
+		String firstPart = string.substring(0, dotPos);
+		String lastPart = string.substring(dotPos);
+		return firstPart + suffix + lastPart;
+	}
+	
+	private static BufferedImage getImageFromURL(String filename) throws MalformedURLException, IOException {
+		return ImageIO.read(new URL(baseURL + "/res/" + filename));
+	}
+	
+	protected ScreenImageRect(int screenWidth, int screenHeight, int width, int height, ScreenRect parent) {
+		super(screenWidth, screenHeight, width, height, parent);
 	}
 
+	public static ScreenImageRect create(int screenWidth, int screenHeight, int width, int height,
+			ScreenRect parent, BufferedImage image,
+			BufferedImage imageHover, BufferedImage imagePress) {
+		ScreenImageRect rect = new ScreenImageRect(screenWidth, screenHeight, width, height, parent);
+		rect.image = image;
+		rect.imageHover = imageHover;
+		rect.imagePress = imagePress;
+		return rect;
+	}
+	
+	public static ScreenImageRect create(int screenWidth, int screenHeight, int width, int height,
+			ScreenRect parent, String imageURL, String imageHoverURL,
+			String imagePressURL) throws MalformedURLException, IOException {
+		BufferedImage image = getImageFromURL(imageURL);
+		BufferedImage imageHover = getImageFromURL(imageHoverURL);
+		BufferedImage imagePress = getImageFromURL(imagePressURL);
+		return create(screenWidth, screenHeight, width, height, parent, image, imageHover, imagePress);
+	}
+	
+	public static ScreenImageRect create(int screenWidth, int screenHeight, ScreenRect parent,
+			String imageURL, String imageHoverURL,
+			String imagePressURL) throws MalformedURLException, IOException {
+		BufferedImage image = getImageFromURL(imageURL);
+		BufferedImage imageHover = getImageFromURL(imageHoverURL);
+		BufferedImage imagePress = getImageFromURL(imagePressURL);
+		return create(screenWidth, screenHeight, image.getWidth(), image.getHeight(), parent, image, imageHover, imagePress);
+	}
+	
+	public static ScreenImageRect create(int screenWidth, int screenHeight, ScreenRect parent,
+			String imageURL) throws MalformedURLException, IOException {
+		BufferedImage image = getImageFromURL(imageURL);
+		return create(screenWidth, screenHeight, image.getWidth(), image.getHeight(), parent, image, image, image);
+	}
+	
+	public static ScreenImageRect create(int screenWidth, int screenHeight, ScreenRect parent,
+			String imageURL, boolean autoSuffix) throws MalformedURLException, IOException {
+		if (!autoSuffix) return create(screenWidth, screenHeight, parent, imageURL);
+		BufferedImage image = getImageFromURL(imageURL);
+		BufferedImage imageHover;
+		BufferedImage imagePress;
+		try {
+			imageHover = getImageFromURL(addSuffix(imageURL, hoverSuffix));
+		} catch (Exception e) {
+			imageHover = image;
+		}
+		try {
+			imagePress = getImageFromURL(addSuffix(imageURL, pressSuffix));
+		} catch (Exception e) {
+			imagePress = image;
+		}
+		return create(screenWidth, screenHeight, image.getWidth(), image.getHeight(), parent, image, imageHover, imagePress);
+	}
+	
+	/*********************************************/
+	
 	private BufferedImage image;
 	private BufferedImage imageHover;
 	private BufferedImage imagePress;
@@ -30,46 +102,17 @@ public class ScreenImageRect extends ScreenColoredCursoredRect {
 		}
 		return imagePress;		
 	}
-	
-	private static BufferedImage getImageFromURL(String filename) throws MalformedURLException, IOException {
-		return ImageIO.read(new URL(baseURL + "/res/" + filename));
-	}
-
-	public static ScreenImageRect create(int screenWidth, int screenHeight, int width, int height,
-			BufferedImage image, BufferedImage imageHover, BufferedImage imagePress) {
-		ScreenImageRect rect = new ScreenImageRect(screenWidth, screenHeight, width, height);
-		rect.image = image;
-		rect.imageHover = imageHover;
-		rect.imagePress = imagePress;
-		return rect;
-	}
-	
-	public static ScreenImageRect create(int screenWidth, int screenHeight, int width, int height,
-			String imageURL, String imageHoverURL, String imagePressURL) throws MalformedURLException, IOException {
-		BufferedImage image = getImageFromURL(imageURL);
-		BufferedImage imageHover = getImageFromURL(imageHoverURL);
-		BufferedImage imagePress = getImageFromURL(imagePressURL);
-		return create(screenWidth, screenHeight, width, height, image, imageHover, imagePress);
-	}
-	
-	public static ScreenImageRect create(int screenWidth, int screenHeight,	String imageURL) throws MalformedURLException, IOException {
-		BufferedImage image = getImageFromURL(imageURL);
-		return create(screenWidth, screenHeight, image.getWidth(), image.getHeight(), image, image, image);
-	}
 
 	public void setImage(BufferedImage image) {
 		setImage(image, MouseStatus.NORMAL);
 	}
 	public void setImage(BufferedImage image, MouseStatus status) {
 		if (status == MouseStatus.NORMAL) {
-			setImage(image);
-			setImageHover(image);
-			setImagePress(image);
+			this.image = image;
 		} else if (status == MouseStatus.HOVER) {
-			setImageHover(image);
-			setImagePress(image);
+			this.imageHover = image;
 		} else {
-			setImagePress(image);
+			this.imagePress = image;
 		}
 	}
 	public void setImage(String imageURL) throws MalformedURLException, IOException {
@@ -92,33 +135,12 @@ public class ScreenImageRect extends ScreenColoredCursoredRect {
 	public void setImagePress(String imagePressURL) throws MalformedURLException, IOException {
 		setImagePress(getImageFromURL(imagePressURL));
 	}
-
 	
-	@Override
-	public void registerHoverIn(GamePanel p) {
-		super.registerHoverIn(p);
-	}
-
-	@Override
-	public void registerHoverOut(GamePanel p) {
-		super.registerHoverOut(p);
-	}
-
-	@Override
-	public void registerClick() {
-		super.registerClick();
-	}
-
-	@Override
-	public void registerPressCosmetics() {
-		super.registerPressCosmetics();
-	}
-
 	@Override
 	public void paint(Graphics2D g) {
 		super.paint(g);
 		BufferedImage currentImage = getCurrentImage();
-		g.drawImage(currentImage, this.upperX, this.upperY, this.upperX + width, this.upperY + height, 0, 0, currentImage.getWidth(), currentImage.getHeight(), null);
+		g.drawImage(currentImage, this.relativeUpperX, this.relativeUpperY, this.relativeUpperX + width, this.relativeUpperY + height, 0, 0, currentImage.getWidth(), currentImage.getHeight(), null);
 	}
 	
 }

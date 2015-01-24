@@ -7,10 +7,12 @@ import java.awt.FontMetrics;
 import java.awt.Graphics2D;
 import java.awt.Point;
 
+import br.com.hamsterpellet.fullscreen.ScreenPage.MouseStatus;
+
 public class ScreenStringRect extends ScreenColoredCursoredRect {
 
-	protected ScreenStringRect(int screenWidth, int screenHeight, int width, int height, String text, Point base, Font f) {
-		super(screenWidth, screenHeight, width, height);
+	protected ScreenStringRect(int screenWidth, int screenHeight, int width, int height, ScreenRect parent, String text, Point base, Font f) {
+		super(screenWidth, screenHeight, width, height, parent);
 		this.text = text;
 		baselineStartPoint = base;
 		font = f;
@@ -47,10 +49,10 @@ public class ScreenStringRect extends ScreenColoredCursoredRect {
 		return new Point(0, metrics.getHeight() - metrics.getDescent());
 	}
 	
-	public static ScreenStringRect create(int screenWidth, int screenHeight, Graphics2D g, String text, Font font) {
+	public static ScreenStringRect create(int screenWidth, int screenHeight, ScreenRect parent, Graphics2D g, String text, Font font) {
 		FontMetrics metrics = g.getFontMetrics(font);
 		Point base = getBaselineStartPoint(metrics, text);
-		return new ScreenStringRect(screenWidth, screenHeight, metrics.stringWidth(text), metrics.getHeight(), text, base, font);
+		return new ScreenStringRect(screenWidth, screenHeight, metrics.stringWidth(text), metrics.getHeight(), parent, text, base, font);
 	}
 	
 
@@ -68,33 +70,13 @@ public class ScreenStringRect extends ScreenColoredCursoredRect {
 	}
 
 	@Override
-	public void registerHoverIn(GamePanel p) {
-		super.registerHoverIn(p);
-	}
-
-	@Override
-	public void registerHoverOut(GamePanel p) {
-		super.registerHoverOut(p);
-	}
-
-	@Override
-	public void registerClick() {
-		super.registerClick();
-	}
-
-	@Override
-	public void registerPressCosmetics() {
-		super.registerPressCosmetics();
-	}
-
-	@Override
 	public void paint(Graphics2D g) {
 		super.paint(g);
 		Color oldColor = g.getColor();
 		Font oldFont = g.getFont();
 		g.setColor(getCurrentFontColor());
 		g.setFont(font);
-		g.drawString(text, upperX + baselineStartPoint.x, upperY + baselineStartPoint.y);
+		g.drawString(text, relativeUpperX + baselineStartPoint.x, relativeUpperY + baselineStartPoint.y);
 		g.setColor(oldColor);
 		g.setFont(oldFont);
 	}

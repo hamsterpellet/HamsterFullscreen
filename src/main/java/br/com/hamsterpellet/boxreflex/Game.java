@@ -6,6 +6,7 @@ import java.util.HashSet;
 
 import br.com.hamsterpellet.fullscreen.ScreenColoredCursoredRect;
 import br.com.hamsterpellet.fullscreen.ScreenPage;
+import br.com.hamsterpellet.fullscreen.ScreenPage.MouseStatus;
 import br.com.hamsterpellet.fullscreen.ScreenRect;
 import br.com.hamsterpellet.fullscreen.UserEventHandler.Debugger;
 
@@ -49,7 +50,7 @@ public class Game {
 				for (int l = 0; l < boxGrid[k].length; l++) {
 					if (boxesAffected.contains(boxGrid[k][l])) {
 						((ScreenColoredCursoredRect) rectGrid[k][l]).setFillColor(boxGrid[k][l].getHoverColor());
-						((ScreenColoredCursoredRect) rectGrid[k][l]).setFillColor(boxGrid[k][l].getHoverColor(), ScreenRect.MouseStatus.HOVER);
+						((ScreenColoredCursoredRect) rectGrid[k][l]).setFillColor(boxGrid[k][l].getHoverColor(), MouseStatus.HOVER);
 					}
 				}
 			}
@@ -64,7 +65,7 @@ public class Game {
 				for (int l = 0; l < boxGrid[k].length; l++) {
 					if (boxesAffected.contains(boxGrid[k][l])) {
 						((ScreenColoredCursoredRect) rectGrid[k][l]).setFillColor(boxGrid[k][l].getColor());
-						((ScreenColoredCursoredRect) rectGrid[k][l]).setFillColor(boxGrid[k][l].getColor(), ScreenRect.MouseStatus.HOVER);
+						((ScreenColoredCursoredRect) rectGrid[k][l]).setFillColor(boxGrid[k][l].getColor(), MouseStatus.HOVER);
 					}
 				}
 			}
@@ -77,25 +78,25 @@ public class Game {
 				final int fi = i;
 				final int fj = j;
 				final Box activeBox = new Box(i, j);
-				final ScreenColoredCursoredRect rect = ScreenColoredCursoredRect.create(screenWidth, screenHeight, 50, 50);
+				final ScreenColoredCursoredRect rect = ScreenColoredCursoredRect.create(screenWidth, screenHeight, 50, 50, null);
 				rect.setPosition((int)(screenWidth / 2 - 125 + j * 50),(int)(screenHeight / 2 - 125 + i * 50));
 				rect.setFillColor(activeBox.getColor());
-				rect.setFillColor(Color.YELLOW, ScreenRect.MouseStatus.PRESSED);
-				rect.setHoverInListener(new ScreenRect.RectListener() {
+				rect.setFillColor(Color.YELLOW, MouseStatus.PRESSED);
+				rect.setMouseInListener(new Runnable() {
 					@Override
-					public void run(ScreenRect r) {
+					public void run() {
 						highlightOnBox(fi, fj);
 					}
 				});
-				rect.setHoverOutListener(new ScreenRect.RectListener() {
+				rect.setMouseOutListener(new Runnable() {
 					@Override
-					public void run(ScreenRect r) {
+					public void run() {
 						unHighlightOnBox(fi, fj);
 					}
 				});
-				rect.setClickListener(new ScreenRect.RectListener() {
+				rect.setMouseUpListener(new Runnable() {
 					@Override
-					public void run(ScreenRect r) {
+					public void run() {
 						debugger.addMessage("HMM", 1);
 						if (getActivePattern().fitsInSpace(4, 4, fi, fj)) {
 							debugger.addMessage("INSIDE", 1);
@@ -103,15 +104,15 @@ public class Game {
 							for (Box box : boxesAffected) {
 								box.change();
 								((ScreenColoredCursoredRect) rectGrid[box.x][box.y]).setFillColor(box.getColor());
-								((ScreenColoredCursoredRect) rectGrid[box.x][box.y]).setFillColor(box.getHoverColor(), ScreenRect.MouseStatus.HOVER);
-								((ScreenColoredCursoredRect) rectGrid[box.x][box.y]).setFillColor(Color.WHITE, ScreenRect.MouseStatus.PRESSED);				
+								((ScreenColoredCursoredRect) rectGrid[box.x][box.y]).setFillColor(box.getHoverColor(), MouseStatus.HOVER);
+								((ScreenColoredCursoredRect) rectGrid[box.x][box.y]).setFillColor(Color.WHITE, MouseStatus.PRESSED);				
 							}
 						}
 					}
 				});
 				boxGrid[i][j] = activeBox;
 				rectGrid[i][j] = rect;
-				page.addRect(rect);
+				page.addRegion(rect);
 			}
 		}		
 	}

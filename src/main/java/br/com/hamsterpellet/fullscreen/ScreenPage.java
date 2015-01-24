@@ -1,93 +1,104 @@
 package br.com.hamsterpellet.fullscreen;
 
-
 import java.awt.Graphics2D;
 import java.awt.Point;
 import java.util.ArrayList;
 
-
 public class ScreenPage {
+	
+	/**************************************************/
 
-	private final ArrayList<ScreenRect> rects;
-	private ScreenRect[] rectArray;
+	private final ArrayList<ScreenRegion> regions;
+	private ScreenRegion[] regionArray;
 
 	public ScreenPage() {
-		rects = new ArrayList<ScreenRect>();
-		rectArray = new ScreenRect[0];
+		regions = new ArrayList<ScreenRegion>();
+		regionArray = new ScreenRegion[0];
 	}
 	
-	public ArrayList<ScreenRect> getRectArrayList() {
-		return rects;
+	public void addRegion(ScreenRegion r) {
+		regions.add(r);
+		regionArray = regions.toArray(regionArray);
 	}
 	
-	public ScreenRect[] getRectArray() {
-		return rectArray;
+	public void removeRegion(ScreenRegion r) {
+		regions.remove(r);
+		regionArray = regions.toArray(regionArray);
 	}
 	
-	public void addRect(ScreenRect r) {
-		r.lock();
-		rects.add(r);
-		rectArray = rects.toArray(rectArray);
-	}
-	
-	public void removeRect(ScreenRect r) {
-		for (int i = 0; i < rects.size(); i++)
-			if (rects.get(i).equals(r))
-				rects.remove(i);
-		rectArray = rects.toArray(rectArray);
-	}
-	
-	public void registerHover(Point mouseNow, Point mouseBefore, GamePanel panel) {
-		if (mouseNow == null) throw new IllegalArgumentException("mouseNow can't be null!");
+	public void registerHover(Point mouseNow, GamePanel panel) {
+		if (mouseNow == null) throw new IllegalArgumentException("Point mouseNow can't be null!");
 		// use mouseBefore == null to trigger all HoverIns possible
 		
 		// first register all hoverOuts, then, only then, the hoverIns
-		boolean[] hoveredOut = new boolean[rectArray.length];
-		for (int i = 0; i < rectArray.length; i++) {
+		boolean[] hoveredOut = new boolean[regionArray.length];
+		
+		// check hoverOuts
+		for (int i = 0; i < regionArray.length; i++) {
 			hoveredOut[i] = false;
-			if (!rectArray[i].contains(mouseNow) && mouseBefore != null && rectArray[i].contains(mouseBefore)) {
-				rectArray[i]._registerHoverOut(panel);
+			if (regionArray[i].isHovered() && !regionArray[i].contains(mouseNow)) {
+				regionArray[i].registerMouseOut(panel);
 				hoveredOut[i] = true;
 			}
 		}
-		for (int i = 0; i < rectArray.length; i++) {
-			if (!hoveredOut[i] && rectArray[i].contains(mouseNow) && (mouseBefore == null || !rectArray[i].contains(mouseBefore))) {
-				rectArray[i]._registerHoverIn(panel);
+		
+		// check hoverIns
+		for (int i = 0; i < regionArray.length; i++) {
+			if (!hoveredOut[i] && !regionArray[i].isHovered() && regionArray[i].contains(mouseNow)) {
+				regionArray[i].registerMouseIn(panel);
 			}
 		}
 	}
 	
-	/*
-	public void registerHover(Point mouseNow, Point mouseBefore, GamePanel panel) {
-		if (mouseNow == null) throw new IllegalArgumentException("mouseNow can't be null!");
-		// use mouseBefore == null to trigger all HoverIns possible
-
-		for (int i = 0; i < rects.size(); i++) {
-			ScreenRect r = rects.get(i);
-			if (!r.contains(mouseNow) && (mouseBefore == null || r.contains(mouseBefore))) {
-				r._registerHoverOut(panel);
-			} else if (r.contains(mouseNow) && (mouseBefore == null || !r.contains(mouseBefore))) {
-				rects.get(i)._registerHoverIn(panel);
+	public void registerMouseUp(Point where) {
+		for (int i = 0; i < regionArray.length; i++) {
+			if (regionArray[i].contains(where)) {
+				regionArray[i].registerMouseUp();
 			}
 		}
-	}
-	*/
-	
-	public void registerMouseReleased(Point where) {
-		for (int i = 0; i < rects.size(); i++)
-			if (rects.get(i).contains(where))
-				rects.get(i)._registerClick();
 	}
 	
 	public void registerMouseDown(Point where) {
-		for (int i = 0; i < rects.size(); i++)
-			if (rects.get(i).contains(where))
-				rects.get(i)._registerPressCosmetics();
+		for (int i = 0; i < regionArray.length; i++) {
+			if (regionArray[i].contains(where)) {
+				regionArray[i].registerMouseDown();
+			}
+		}
 	}
 	
-	public void paintAllRects(Graphics2D g) {
-		for (int i = 0; i < rects.size(); i++)
-			rects.get(i).paint(g);
+	public void paint(Graphics2D g) {
+		for (int i = 0; i < regionArray.length; i++) {
+			regionArray[i].paint(g);
+		}
+	}
+	
+	/****************************************************/
+
+	@SuppressWarnings("serial")
+	public static final class OutOfScreenException extends RuntimeException {}
+	
+	public static enum MouseStatus {NORMAL, HOVER, PRESSED};
+	
+	public static enum BasePos {
+		BEGIN(0, 0), CENTER(1, 0), END(2, 0),
+		CENTER_LEFT(1, -0.5), CENTER_RIGHT(1, 0.5), CENTER_UP(1, -0.5), CENTER_DOWN(1, 0.5);
+		// LEFT & UP are the same
+		// RIGHT & DOWN are the same too
+		// this is just for readability
+		
+		public final int multiplier;
+		public final double centerShift;
+		
+		private BasePos(int multiplier, double centerShift) {
+			this.multiplier = multiplier;
+			this.centerShift = centerShift;
+		}
+	}
+	public static enum RelativePos {
+		LEFT, RIGHT, ABOVE, BELOW;
+	}
+	public static enum Direction {
+		UP, DOWN, LEFT, RIGHT; 
 	}
 	
 }

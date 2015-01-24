@@ -168,7 +168,7 @@ public class GamePanel implements Runnable, KeyListener, MouseListener, MouseMot
 	            // Draw on buffer (a.k.a. render)
 	            bufferGraphics.setColor(backgroundColor);
 	            bufferGraphics.fillRect(0, 0, displayMode.getWidth(), displayMode.getHeight());
-	            userEventHandler.getScreenPage().paintAllRects(bufferGraphics);
+	            userEventHandler.getScreenPage().paint(bufferGraphics);
 	            
 	            userEventHandler._onRender(bufferGraphics);
 	            // Actually draw
