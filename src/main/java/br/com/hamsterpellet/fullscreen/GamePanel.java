@@ -85,12 +85,22 @@ public class GamePanel implements Runnable, KeyListener, MouseListener, MouseMot
 		singleton.thread.start();
 	}
 	
+	public static void switchPage(ScreenPage newPage) {
+		if (!isRunning()) throw new FullscreenNotLaunchedException();
+		singleton.currentScreenPage = newPage;
+	}
+	
 	public static boolean isRunning() {
 		return singleton != null && singleton.running;
 	}
 	
 	/** OTHER ACTIONS **/
 
+	public static ScreenPage getActivePage() {
+		if (!isRunning()) throw new FullscreenNotLaunchedException();		
+		return singleton.currentScreenPage;
+	}
+	
 	public static void hideCursor() {
 		if (!isRunning()) throw new FullscreenNotLaunchedException();
 		singleton.frame.setCursor(singleton.transparentCursor);
@@ -157,7 +167,6 @@ public class GamePanel implements Runnable, KeyListener, MouseListener, MouseMot
 		screenManager.getFullScreenWindow().addMouseMotionListener(this);
 		screenManager.getFullScreenWindow().addMouseWheelListener(this);
 		running = true;
-		boolean firstTime = true;
 		
 		long startTimeNanos;
         long frameUpdateTimeMillis;
@@ -172,8 +181,9 @@ public class GamePanel implements Runnable, KeyListener, MouseListener, MouseMot
 	            Graphics2D bufferGraphics = screenManager.getGraphics();
 	            
 	            // Update
-	            if (firstTime) {
+	            if (currentScreenPage.wasJustBorn()) {
 	            	currentScreenPage.getUserEventHandler()._onInit(bufferGraphics);
+	            	currentScreenPage.unsetJustBorn();
 	            } else {
 	            	currentScreenPage.getUserEventHandler()._onUpdate();
 	            }
@@ -197,8 +207,6 @@ public class GamePanel implements Runnable, KeyListener, MouseListener, MouseMot
 	            	}
 	            } catch (Exception e) {
 	            	e.printStackTrace();
-	            } finally {
-	            	firstTime = false;
 	            }
 	            
 	        }

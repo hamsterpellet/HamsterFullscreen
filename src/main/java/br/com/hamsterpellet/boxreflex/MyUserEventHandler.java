@@ -14,8 +14,10 @@ import javax.swing.JOptionPane;
 import br.com.hamsterpellet.fullscreen.GamePanel;
 import br.com.hamsterpellet.fullscreen.ScreenPage;
 import br.com.hamsterpellet.fullscreen.ScreenPage.OneDimPosition;
-import br.com.hamsterpellet.fullscreen.region.ScreenImageRect;
 import br.com.hamsterpellet.fullscreen.UserEventHandler;
+import br.com.hamsterpellet.fullscreen.region.Debugger;
+import br.com.hamsterpellet.fullscreen.region.ScreenColoredCursoredRect;
+import br.com.hamsterpellet.fullscreen.region.ScreenImageRect;
 
 public class MyUserEventHandler extends UserEventHandler {
 
@@ -43,18 +45,41 @@ public class MyUserEventHandler extends UserEventHandler {
 
 			GamePanel.prepareLaunch(30, Color.BLACK, KeyEvent.VK_ESCAPE);
 			
-			ScreenPage index = ScreenPage.create(handler);
+			ScreenPage index = new ScreenPage(handler);
 			
 			ScreenImageRect exitButton = ScreenImageRect.create(null, "alea_jacta_est.bmp", true);
-			exitButton.setMouseUpListener(new Runnable() {
+			exitButton.setMouseClickListener(new Runnable() {
 				@Override
 				public void run() {
 					GamePanel.exit();
 				}
 			});
 			exitButton.setHoverCursor(Cursor.HAND_CURSOR);
-			exitButton.setPosition(OneDimPosition.CENTER, OneDimPosition.CENTER);
+			exitButton.setPosition(OneDimPosition.BEFORE_CENTER, OneDimPosition.BEFORE_CENTER);
 			index.addRegion(exitButton);
+			
+			ScreenImageRect exitButton2 = ScreenImageRect.create(null, "alea_jacta_est.bmp", true);
+			exitButton2.setHoverCursor(Cursor.CROSSHAIR_CURSOR);
+			exitButton2.setPosition(OneDimPosition.AFTER_CENTER, OneDimPosition.AFTER_CENTER);
+			index.addRegion(exitButton2);
+	
+			final ScreenPage newp = new ScreenPage(handler);
+			ScreenColoredCursoredRect tt = ScreenColoredCursoredRect.create(0.5, 0.5, null, Color.BLUE, Color.GREEN, Color.WHITE);
+			tt.setPosition(0.1, 0.1);
+			tt.setMouseClickListener(new Runnable() {
+				@Override
+				public void run() {
+					handler.getDebugger().addMessage("YAYY", 3);
+				}
+			});
+			newp.addRegion(tt);
+
+			exitButton2.setMouseClickListener(new Runnable() {
+				@Override
+				public void run() {
+					GamePanel.switchPage(newp);
+				}
+			});
 			
 			GamePanel.launch(index);
 			

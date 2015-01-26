@@ -6,27 +6,30 @@ import java.util.ArrayList;
 
 import br.com.hamsterpellet.fullscreen.region.ScreenRegion;
 
-public class ScreenPage {
+public final class ScreenPage {
 	
 	/**************************************************/
 
 	private final ArrayList<ScreenRegion> regions;
 	private ScreenRegion[] regionArray;
 
+	private boolean justBorn = true; // used by GamePanel to decide to call onInit() or not
+	public void unsetJustBorn() {
+		justBorn = false;
+	}
+	public boolean wasJustBorn() {
+		return justBorn;
+	}
+	
 	private final UserEventHandler ueHandler;
 	public final UserEventHandler getUserEventHandler() {
 		return ueHandler;
 	}
 	
-	private ScreenPage(UserEventHandler ueHandler) {
+	public ScreenPage(UserEventHandler ueHandler) {
 		this.ueHandler = ueHandler;
 		regions = new ArrayList<ScreenRegion>();
 		regionArray = new ScreenRegion[0];
-	}
-	public static ScreenPage create(UserEventHandler ueHandler) {
-		ScreenPage p = new ScreenPage(ueHandler);
-		ueHandler.setScreenPage(p);
-		return p;
 	}
 	
 	public void addRegion(ScreenRegion r) {

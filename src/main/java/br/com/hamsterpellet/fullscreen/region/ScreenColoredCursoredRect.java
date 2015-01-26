@@ -36,6 +36,14 @@ public class ScreenColoredCursoredRect extends ScreenRect {
 		rect.fillColor = rect.fillColorHover = rect.fillColorPress = color;
 		return rect;
 	}
+	public static ScreenColoredCursoredRect create(double width, double height,
+			ScreenRect parent, Color color, Color hoverColor, Color pressColor) {
+		ScreenColoredCursoredRect rect = create(width, height, parent);
+		rect.fillColor = color;
+		rect.fillColorHover = hoverColor;
+		rect.fillColorPress = pressColor;
+		return rect;
+	}
 	
 	private Cursor hoverCursor;
 	private Cursor defaultCursor;

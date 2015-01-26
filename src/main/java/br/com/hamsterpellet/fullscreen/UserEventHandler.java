@@ -4,6 +4,8 @@ package br.com.hamsterpellet.fullscreen;
 import java.awt.Graphics2D;
 import java.awt.Point;
 
+import br.com.hamsterpellet.fullscreen.region.Debugger;
+
 public abstract class UserEventHandler {
 	
 	/** NEVER CALL THESE METHODS OUTSIDE THE CLASS!! **/
@@ -35,64 +37,14 @@ public abstract class UserEventHandler {
 	protected abstract boolean onMouseWheelMovedUp();
 	protected abstract boolean onMouseWheelMovedDown();
 	protected abstract void onMouseMoved(final Point mouseCurrentLoc, final Point mouseLastLoc, double distance, boolean dragged);
-	
-	/** Debugger **/
-	
-	public abstract static class Debugger {
-		
-		/** AUTO_CLEAR **/
-		private boolean autoClear = true;
-		private int autoClearPoolSize = 5;
-		private int autoClearCounter = 0;
-		public final void disableAutoClear() {
-			autoClear = false;
-		}
-		public final void setAutoClearPoolSize(int size) {
-			autoClearPoolSize = size;
-		}
-		/** END AUTO_CLEAR **/
 
-		private String messagePool = "";
-		private boolean mustClear = false;
-		private int debugLevel = 0;
-		
-		public final void addMessage(String message, int level) {
-			if (level >= debugLevel) {
-				if (mustClear) {
-					messagePool = message;
-					mustClear = false;
-				} else if (level > 0 && autoClear && autoClearCounter >= autoClearPoolSize) {
-					// >= here to be safe against setAutoClearPoolSize() in the middle of the thing
-					messagePool = message;
-					autoClearCounter = 0;
-				} else {
-					messagePool += " | " + message;
-					if (level > 0 && autoClear) autoClearCounter++;
-				}
-				showMessage(message, messagePool);
-			}
-		}
-		
-		protected abstract void showMessage(String message, String messagePool);
-		
-		protected abstract void renderMessage(final Graphics2D g, String messagePool);
-		
-		private void onRender(final Graphics2D g) {
-			renderMessage(g, messagePool);
-		}
-		
-		public void setDebugLevel(int level) {
-			debugLevel = level;
-		}
-		
-		private void clear(int clearLevel) {
-			if (clearLevel >= debugLevel) mustClear = true;
-		}
-		
-	}
+	/******************************************/
+	/**        CONSTRUCTOR AND STUFF         **/
+	/******************************************/
 	
+	private boolean usingDefaultDebugger;
 	private Debugger debugger;
-	protected final Debugger getDebugger() {
+	public final Debugger getDebugger() {
 		return debugger;
 	}
 	protected final void setDebugger(Debugger debugger) {
@@ -101,31 +53,6 @@ public abstract class UserEventHandler {
 			usingDefaultDebugger = false;
 		}
 	}
-	
-	/** CONSTRUCTOR AND STUFF **/
-
-	private boolean usingDefaultDebugger;
-	private ScreenPage page;
-	public final void setScreenPage(ScreenPage page) {
-		if (this.page == null) this.page = page;
-	}
-	
-	/*
-	protected final int getScreenWidth() {
-		return getGamePanel().getDisplayMode().getWidth();
-	}
-	protected final int getScreenHeight() {
-		return getGamePanel().getDisplayMode().getHeight();
-	}
-	
-	@SuppressWarnings("serial")
-	public static final class UEHandlerNotReadyException extends RuntimeException {}
-	protected final boolean isReady() {
-		return gamePanel != null;
-	}
-	*/
-	
-	/** CONSTRUCTOR **/
 	
 	protected UserEventHandler() {
 		debugger = new Debugger() {
@@ -146,14 +73,14 @@ public abstract class UserEventHandler {
 		if (mouseLoc == null) {
 			mouseLoc = new Point(GamePanel.getScreenWidth() / 2, GamePanel.getScreenHeight() / 2);
 		}
-		page.registerHover(mouseLoc);
+		GamePanel.getActivePage().registerHover(mouseLoc);
 		debugger.clear(0);
 	}
 	protected final void _onUpdate() {
 		onUpdate();
 	}
 	protected final void _onRender(final Graphics2D g) {
-		page.paint(g);
+		GamePanel.getActivePage().paint(g);
 		debugger.onRender(g);
 		onRender(g);
 	}
@@ -203,14 +130,14 @@ public abstract class UserEventHandler {
 	protected final boolean _onMouseLeftButtonPressed(final Point mouseLoc) {
 		debugger.addMessage("onMouseLeftButtonPressed(Point(" + mouseLoc.x + ", " + mouseLoc.y + "))", 0);
 		boolean b = onMouseLeftButtonPressed(mouseLoc);
-		page.registerMouseDown(mouseLoc);
+		GamePanel.getActivePage().registerMouseDown(mouseLoc);
 		debugger.clear(0);
 		return b;
 	}
 	protected final boolean _onMouseLeftButtonReleased(final Point mouseLoc) {
 		debugger.addMessage("onMouseLeftButtonReleased(Point(" + mouseLoc.x + ", " + mouseLoc.y + "))", 0);
 		boolean b = onMouseLeftButtonReleased(mouseLoc);
-		page.registerMouseUp(mouseLoc);
+		GamePanel.getActivePage().registerMouseUp(mouseLoc);
 		debugger.clear(0);
 		return b;
 	}
@@ -253,7 +180,7 @@ public abstract class UserEventHandler {
 	protected final void _onMouseMoved(final Point mouseCurrentLoc, final Point mouseLastLoc, double distance, boolean dragged) {
 		debugger.addMessage("onMouseMoved(Point(" + mouseCurrentLoc.x + ", " + mouseCurrentLoc.y + "), Point(" +
 				mouseLastLoc.x + ", " + mouseLastLoc.y + "), " + distance + ", " + dragged + ")", 0);
-		page.registerHover(mouseCurrentLoc);
+		GamePanel.getActivePage().registerHover(mouseCurrentLoc);
 		onMouseMoved(mouseCurrentLoc, mouseLastLoc, distance, dragged);
 		debugger.clear(0);
 	}

@@ -6,7 +6,7 @@ import java.util.HashSet;
 
 import br.com.hamsterpellet.fullscreen.ScreenPage;
 import br.com.hamsterpellet.fullscreen.ScreenPage.MouseStatus;
-import br.com.hamsterpellet.fullscreen.UserEventHandler.Debugger;
+import br.com.hamsterpellet.fullscreen.region.Debugger;
 import br.com.hamsterpellet.fullscreen.region.ScreenColoredCursoredRect;
 import br.com.hamsterpellet.fullscreen.region.ScreenRect;
 
