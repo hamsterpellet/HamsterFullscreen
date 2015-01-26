@@ -4,6 +4,8 @@ import java.awt.Graphics2D;
 import java.awt.Point;
 import java.util.ArrayList;
 
+import br.com.hamsterpellet.fullscreen.region.ScreenRegion;
+
 public class ScreenPage {
 	
 	/**************************************************/
@@ -11,9 +13,20 @@ public class ScreenPage {
 	private final ArrayList<ScreenRegion> regions;
 	private ScreenRegion[] regionArray;
 
-	public ScreenPage() {
+	private final UserEventHandler ueHandler;
+	public final UserEventHandler getUserEventHandler() {
+		return ueHandler;
+	}
+	
+	private ScreenPage(UserEventHandler ueHandler) {
+		this.ueHandler = ueHandler;
 		regions = new ArrayList<ScreenRegion>();
 		regionArray = new ScreenRegion[0];
+	}
+	public static ScreenPage create(UserEventHandler ueHandler) {
+		ScreenPage p = new ScreenPage(ueHandler);
+		ueHandler.setScreenPage(p);
+		return p;
 	}
 	
 	public void addRegion(ScreenRegion r) {
@@ -26,7 +39,7 @@ public class ScreenPage {
 		regionArray = regions.toArray(regionArray);
 	}
 	
-	public void registerHover(Point mouseNow, GamePanel panel) {
+	public void registerHover(Point mouseNow) {
 		if (mouseNow == null) throw new IllegalArgumentException("Point mouseNow can't be null!");
 		// use mouseBefore == null to trigger all HoverIns possible
 		
@@ -36,23 +49,23 @@ public class ScreenPage {
 		// check hoverOuts
 		for (int i = 0; i < regionArray.length; i++) {
 			hoveredOut[i] = false;
-			if (regionArray[i].isHovered() && !regionArray[i].contains(mouseNow)) {
-				regionArray[i].registerMouseOut(panel);
+			if (regionArray[i].isHovered() && !regionArray[i].containsOnScreen(mouseNow)) {
+				regionArray[i].registerMouseOut();
 				hoveredOut[i] = true;
 			}
 		}
 		
 		// check hoverIns
 		for (int i = 0; i < regionArray.length; i++) {
-			if (!hoveredOut[i] && !regionArray[i].isHovered() && regionArray[i].contains(mouseNow)) {
-				regionArray[i].registerMouseIn(panel);
+			if (!hoveredOut[i] && !regionArray[i].isHovered() && regionArray[i].containsOnScreen(mouseNow)) {
+				regionArray[i].registerMouseIn();
 			}
 		}
 	}
 	
 	public void registerMouseUp(Point where) {
 		for (int i = 0; i < regionArray.length; i++) {
-			if (regionArray[i].contains(where)) {
+			if (regionArray[i].containsOnScreen(where)) {
 				regionArray[i].registerMouseUp();
 			}
 		}
@@ -60,7 +73,7 @@ public class ScreenPage {
 	
 	public void registerMouseDown(Point where) {
 		for (int i = 0; i < regionArray.length; i++) {
-			if (regionArray[i].contains(where)) {
+			if (regionArray[i].containsOnScreen(where)) {
 				regionArray[i].registerMouseDown();
 			}
 		}
@@ -75,23 +88,26 @@ public class ScreenPage {
 	/****************************************************/
 
 	@SuppressWarnings("serial")
-	public static final class OutOfScreenException extends RuntimeException {}
+	public static final class OutOfParentException extends RuntimeException {}
 	
 	public static enum MouseStatus {NORMAL, HOVER, PRESSED};
 	
-	public static enum BasePos {
-		BEGIN(0, 0), CENTER(1, 0), END(2, 0),
-		CENTER_LEFT(1, -0.5), CENTER_RIGHT(1, 0.5), CENTER_UP(1, -0.5), CENTER_DOWN(1, 0.5);
-		// LEFT & UP are the same
-		// RIGHT & DOWN are the same too
-		// this is just for readability
+	public static enum OneDimPosition {
+		BEGIN(0, 0), BEFORE_CENTER(0.5, -1), CENTER(0.5, -0.5), AFTER_CENTER(0.5, 0), END(1, -1);
 		
-		public final int multiplier;
-		public final double centerShift;
+		// Example: BEFORE_CENTER is (0.5, -1) because:
+		// - move UpperX to 0.5 of screen
+		// - then move it to the right in -1*width units
+		// (aka move it back to the left in an amount equal to the width
+		//  in order for the rect to be right before the vertical center line)
+		// this also works for horizontal (upperY)
 		
-		private BasePos(int multiplier, double centerShift) {
-			this.multiplier = multiplier;
-			this.centerShift = centerShift;
+		public final double screenPosition;
+		public final double dimensionShift;
+		
+		private OneDimPosition(double screenPosition, double dimensionShift) {
+			this.screenPosition = screenPosition;
+			this.dimensionShift = dimensionShift;
 		}
 	}
 	public static enum RelativePos {

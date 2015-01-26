@@ -22,17 +22,19 @@ import javax.swing.JPanel;
 @SuppressWarnings("serial")
 public class GamePanel implements Runnable, KeyListener, MouseListener, MouseMotionListener, MouseWheelListener {
 	
-	private final JFrame frame;
+	/** FIELDS AND CONSTRUCTOR **/
+	
+	private JFrame frame;
 	private final JPanel panel;
 	private final DisplayMode displayMode;
 	private final ScreenManager screenManager;
-	
-	private final UserEventHandler userEventHandler;
 
-	private final Cursor transparentCursor;
+	private Cursor transparentCursor;
 	private final Color backgroundColor;
 	private final int keyboardKeyToEndProgram;
 	private final int FPS;
+	
+	private ScreenPage currentScreenPage;
 
 	private final HashMap<Integer, KeyState> keyPressedHashMap;
 	private Point mouseLastLoc;
@@ -40,36 +42,19 @@ public class GamePanel implements Runnable, KeyListener, MouseListener, MouseMot
 	private boolean running;
 	private final Thread thread;
 	
-	public static void launchGame(int FPS, UserEventHandler ueHandler, java.awt.Color backgroundColor, int keyEventToClose) throws FullscreenException {
-		/** TEMPORARY ONLY **/
-		if (keyEventToClose == KeyEvent.VK_UNDEFINED /* a.k.a. zero */) {
-			keyEventToClose = KeyEvent.VK_ESCAPE;
-		}
-		/** END TEMPORARY ONLY **/
-		GamePanel g = new GamePanel(new JPanel(), FPS, ueHandler, backgroundColor, keyEventToClose);
-		ueHandler.setGamePanel(g);
-		g.thread.start();
-	}
+	private static GamePanel singleton = null;
 	
-	private GamePanel(JPanel panel, int FPS, UserEventHandler ueHandler, java.awt.Color backgroundColor, int keyEventToClose) throws FullscreenException {
-		if (FPS <= 0) {
-			throw new InvalidFPSException();
-		}
-		
+	private GamePanel(int FPS, java.awt.Color backgroundColor, int keyEventToClose) throws UnableToFullscreenException {		
 		ScreenManager screenManager = new ScreenManager();
 		this.displayMode = screenManager.findBestCompatibleDisplayMode(displayModesList);
 		if (this.displayMode == null) {
-			throw new FullscreenException();
+			throw new UnableToFullscreenException();
 		}
 		
-		
-		this.frame = screenManager.setFullScreen(displayMode, panel);
-		this.panel = panel;
-		this.userEventHandler = ueHandler;
+		this.panel = new JPanel();
 		this.screenManager = screenManager;
 		this.backgroundColor = backgroundColor;
 		this.FPS = FPS;
-		this.transparentCursor = frame.getToolkit().createCustomCursor(new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB), new Point(), null);
 		this.keyboardKeyToEndProgram = keyEventToClose;
 		
 
@@ -79,53 +64,85 @@ public class GamePanel implements Runnable, KeyListener, MouseListener, MouseMot
 		this.keyPressedHashMap = new HashMap<Integer, KeyState>();
 	}
 	
-	public void exit() {
-		exit(false);
+	/** LAUNCH **/
+	
+	public static void prepareLaunch(int FPS, java.awt.Color backgroundColor, int keyEventToClose) throws UnableToFullscreenException {
+		if (singleton != null) {
+			throw new RuntimeException("Attempted to prepare launch more than once!");
+		}
+		/** TEMPORARY ONLY **/
+		if (keyEventToClose == KeyEvent.VK_UNDEFINED /* a.k.a. zero */) {
+			keyEventToClose = KeyEvent.VK_ESCAPE;
+		}
+		/** END TEMPORARY ONLY **/
+		singleton = new GamePanel(FPS, backgroundColor, keyEventToClose);
 	}
-	public void exit(boolean lockThreadUntilDone) {
-		// the call to exit(true) only returns after all UserEventHandlerInterface.onExit() events
-		// are completely processed. If those are locked as well, this will remain locked.
-		this.running = false;
-		while (lockThreadUntilDone && this.thread.isAlive());
+	public static void launch(ScreenPage firstPage) {
+		if (singleton == null) throw new FullscreenNotPreparedException();
+		singleton.frame = singleton.screenManager.setFullScreen(singleton.displayMode, singleton.panel);
+		singleton.transparentCursor = singleton.frame.getToolkit().createCustomCursor(new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB), new Point(), null);
+		singleton.currentScreenPage = firstPage;
+		singleton.thread.start();
 	}
 	
-	/** CURSOR STUFF **/
-
-	public void hideCursor() {
-		frame.setCursor(transparentCursor);
+	public static boolean isRunning() {
+		return singleton != null && singleton.running;
 	}
-	public void setCursor(int whichCursor) { // int Cursor.SOMETHING
+	
+	/** OTHER ACTIONS **/
+
+	public static void hideCursor() {
+		if (!isRunning()) throw new FullscreenNotLaunchedException();
+		singleton.frame.setCursor(singleton.transparentCursor);
+	}
+	public static void setCursor(int whichCursor) { // int Cursor.SOMETHING
 		/* Examples:
 		 * Cursor.HAND_CURSOR
 		 * Cursor.DEFAULT_CURSOR
 		 * Cursor.CROSSHAIR_CURSOR
 		 */
-		frame.setCursor(Cursor.getPredefinedCursor(whichCursor));
+		if (!isRunning()) throw new FullscreenNotLaunchedException();
+		singleton.frame.setCursor(Cursor.getPredefinedCursor(whichCursor));
 	}
-	public void setCursor(Cursor whichCursor) {
-		frame.setCursor(whichCursor);
-	}
-	
-	/** GETTERS **/
-	
-	public int getScreenCoordinateX(double percentageX) {
-		return (int) (percentageX * displayMode.getWidth());
-	}
-	public int getScreenCoordinateY(double percentageY) {
-		return (int) (percentageY * displayMode.getHeight());
-	}
-	public Point getScreenCoordinates(double percentageX, double percentageY) {
-		return new Point(getScreenCoordinateX(percentageX), getScreenCoordinateY(percentageY));
+	public static void setCursor(Cursor whichCursor) {
+		if (!isRunning()) throw new FullscreenNotLaunchedException();
+		singleton.frame.setCursor(whichCursor);
 	}
 	
-	public DisplayMode getDisplayMode() {
-		return this.displayMode;
+	public static DisplayMode getDisplayMode() {
+		if (singleton == null) throw new FullscreenNotPreparedException();
+		return singleton.displayMode;
 	}
-	public Point getMouseLocation() {
-		return this.mouseLastLoc;
+	
+	public static Point getMouseLocation() {
+		if (!isRunning()) throw new FullscreenNotLaunchedException();
+		return singleton.mouseLastLoc;
 	}
-	public boolean isRunning() {
-		return this.running;
+	
+	public static int getScreenWidth() {
+		if (singleton == null) throw new FullscreenNotPreparedException();
+		return singleton.displayMode.getWidth();
+	}
+	public static int getScreenHeight() {
+		if (singleton == null) throw new FullscreenNotPreparedException();
+		return singleton.displayMode.getHeight();
+	}
+	
+	public static Point percentToScreenPoint(double x, double y) {
+		if (singleton == null) throw new FullscreenNotPreparedException();
+		return new Point((int) (x * singleton.displayMode.getWidth()),
+				(int) (y * singleton.displayMode.getHeight()));
+	}
+	
+	public static void exit() {
+		exit(false);
+	}
+	public static void exit(boolean lockThreadUntilDone) {
+		// the call to exit(true) only returns after all UserEventHandlerInterface.onExit() events
+		// are completely processed. If those are locked as well, this will remain locked.
+		if (!isRunning()) throw new FullscreenNotLaunchedException();
+		singleton.running = false;
+		while (lockThreadUntilDone && singleton.thread.isAlive());
 	}
 	
 	/** Everything from now on is forcefully public but consider them private to the outside **/
@@ -135,10 +152,6 @@ public class GamePanel implements Runnable, KeyListener, MouseListener, MouseMot
 	/** ################################################# **/
 	
 	public void run() {
-		if (!userEventHandler.isReady()) {
-			throw new UserEventHandler.UEHandlerNotReadyException();
-		}
-		
 		screenManager.getFullScreenWindow().addKeyListener(this);
 		screenManager.getFullScreenWindow().addMouseListener(this);
 		screenManager.getFullScreenWindow().addMouseMotionListener(this);
@@ -160,17 +173,17 @@ public class GamePanel implements Runnable, KeyListener, MouseListener, MouseMot
 	            
 	            // Update
 	            if (firstTime) {
-	        		userEventHandler._onInit(bufferGraphics);
+	            	currentScreenPage.getUserEventHandler()._onInit(bufferGraphics);
 	            } else {
-	            	userEventHandler._onUpdate();
+	            	currentScreenPage.getUserEventHandler()._onUpdate();
 	            }
 	            
 	            // Draw on buffer (a.k.a. render)
 	            bufferGraphics.setColor(backgroundColor);
 	            bufferGraphics.fillRect(0, 0, displayMode.getWidth(), displayMode.getHeight());
-	            userEventHandler.getScreenPage().paint(bufferGraphics);
+	            currentScreenPage.paint(bufferGraphics);
 	            
-	            userEventHandler._onRender(bufferGraphics);
+	            currentScreenPage.getUserEventHandler()._onRender(bufferGraphics);
 	            // Actually draw
 	            screenManager.drawFromBuffer();
 	            bufferGraphics.dispose();
@@ -195,9 +208,9 @@ public class GamePanel implements Runnable, KeyListener, MouseListener, MouseMot
         } finally {
         	screenManager.exitFullScreen();
         	if (normalExit) {
-    	        userEventHandler._onNormalExit();        		
+        		currentScreenPage.getUserEventHandler()._onNormalExit();        		
         	} else {
-    	        userEventHandler._onErrorExit();        		
+        		currentScreenPage.getUserEventHandler()._onErrorExit();        		
         	}
         }
 	}
@@ -224,11 +237,11 @@ public class GamePanel implements Runnable, KeyListener, MouseListener, MouseMot
     	if (keyState == null || keyState == KeyState.RELEASED) {
     		//It was pressed now!
         	keyPressedHashMap.put(keyPressedCode, KeyState.PRESSED);
-        	consume = userEventHandler._onKeyPressed(String.valueOf(key.getKeyChar()), keyPressedCode); 
+        	consume = currentScreenPage.getUserEventHandler()._onKeyPressed(String.valueOf(key.getKeyChar()), keyPressedCode); 
     	} else if (keyState == KeyState.PRESSED) {
        		//It was just re-pressed, aka held
    			keyPressedHashMap.put(keyPressedCode, KeyState.HELD);
-       		consume = userEventHandler._onKeyHeld(String.valueOf(key.getKeyChar()), keyPressedCode);
+       		consume = currentScreenPage.getUserEventHandler()._onKeyHeld(String.valueOf(key.getKeyChar()), keyPressedCode);
     	} // else if it's held, do nothing (just consume) -- no need for the else because it's obvious
     	if (consume) {
     		key.consume();
@@ -251,13 +264,13 @@ public class GamePanel implements Runnable, KeyListener, MouseListener, MouseMot
     	// there are two methods to tell if must consume or not.
     	// if one of them says to consume, then consume.
     	
-    	boolean consume = userEventHandler._onKeyReleased(String.valueOf(key.getKeyChar()), key.getKeyCode());
+    	boolean consume = currentScreenPage.getUserEventHandler()._onKeyReleased(String.valueOf(key.getKeyChar()), key.getKeyCode());
     	boolean newconsume;
     	
     	if (oldKeyState == KeyState.PRESSED) {
-    		newconsume = userEventHandler._onKeyClicked(String.valueOf(key.getKeyChar()), key.getKeyCode());
+    		newconsume = currentScreenPage.getUserEventHandler()._onKeyClicked(String.valueOf(key.getKeyChar()), key.getKeyCode());
     	} else {
-    		newconsume = userEventHandler._onKeyUnheld(String.valueOf(key.getKeyChar()), key.getKeyCode());
+    		newconsume = currentScreenPage.getUserEventHandler()._onKeyUnheld(String.valueOf(key.getKeyChar()), key.getKeyCode());
     	}
     	
     	if (consume || newconsume) {
@@ -278,13 +291,13 @@ public class GamePanel implements Runnable, KeyListener, MouseListener, MouseMot
 		int i = e.getButton();
 		boolean consume = false;
 		if (i == MouseEvent.BUTTON1) {
-			consume = userEventHandler._onMouseLeftButtonPressed(panel.getMousePosition());
+			consume = currentScreenPage.getUserEventHandler()._onMouseLeftButtonPressed(panel.getMousePosition());
 		}
 		if (i == MouseEvent.BUTTON2) {
-			consume = userEventHandler._onMouseWheelPressed(panel.getMousePosition());
+			consume = currentScreenPage.getUserEventHandler()._onMouseWheelPressed(panel.getMousePosition());
 		}
 		if (i == MouseEvent.BUTTON3) {
-			consume = userEventHandler._onMouseRightButtonPressed(panel.getMousePosition());
+			consume = currentScreenPage.getUserEventHandler()._onMouseRightButtonPressed(panel.getMousePosition());
 		}
 		if (consume) {
 			e.consume();
@@ -297,13 +310,13 @@ public class GamePanel implements Runnable, KeyListener, MouseListener, MouseMot
 		int i = e.getButton();
 		boolean consume = false;
 		if (i == MouseEvent.BUTTON1) {
-			consume = userEventHandler._onMouseLeftButtonReleased(panel.getMousePosition());
+			consume = currentScreenPage.getUserEventHandler()._onMouseLeftButtonReleased(panel.getMousePosition());
 		}
 		if (i == MouseEvent.BUTTON2) {
-			consume = userEventHandler._onMouseWheelReleased(panel.getMousePosition());
+			consume = currentScreenPage.getUserEventHandler()._onMouseWheelReleased(panel.getMousePosition());
 		}
 		if (i == MouseEvent.BUTTON3) {
-			consume = userEventHandler._onMouseRightButtonReleased(panel.getMousePosition());
+			consume = currentScreenPage.getUserEventHandler()._onMouseRightButtonReleased(panel.getMousePosition());
 		}
 		if (consume) {
 			e.consume();
@@ -331,7 +344,7 @@ public class GamePanel implements Runnable, KeyListener, MouseListener, MouseMot
 		} else {
 			distance = Point.distance(tempPoint.x, tempPoint.y, mouseLastLoc.x, mouseLastLoc.y);
 		}
-		userEventHandler._onMouseMoved(tempPoint, mouseLastLoc, distance, dragged);
+		currentScreenPage.getUserEventHandler()._onMouseMoved(tempPoint, mouseLastLoc, distance, dragged);
 		mouseLastLoc = tempPoint;
 	}
 
@@ -343,9 +356,9 @@ public class GamePanel implements Runnable, KeyListener, MouseListener, MouseMot
     	
 		boolean consume = false;
 		if (e.getWheelRotation() < 0) {
-			consume = userEventHandler._onMouseWheelMovedUp(e.getPoint());
+			consume = currentScreenPage.getUserEventHandler()._onMouseWheelMovedUp(e.getPoint());
 		} else if (e.getWheelRotation() > 0) {
-			consume = userEventHandler._onMouseWheelMovedDown(e.getPoint());
+			consume = currentScreenPage.getUserEventHandler()._onMouseWheelMovedDown(e.getPoint());
 		}
 		if (consume) {
 			e.consume();
@@ -354,8 +367,9 @@ public class GamePanel implements Runnable, KeyListener, MouseListener, MouseMot
 	
 	/** ################################################# **/
 
-	public static final class FullscreenException extends Exception {}
-	public static final class InvalidFPSException extends RuntimeException {}
+	public static final class UnableToFullscreenException extends Exception {}
+	public static final class FullscreenNotPreparedException extends RuntimeException {}
+	public static final class FullscreenNotLaunchedException extends RuntimeException {}
 	
 	private static final DisplayMode[] displayModesList = {
 		new DisplayMode(1366, 768, 32, 0),

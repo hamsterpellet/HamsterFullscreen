@@ -1,29 +1,38 @@
-package br.com.hamsterpellet.fullscreen;
+package br.com.hamsterpellet.fullscreen.region;
 
 
 import java.awt.Color;
 import java.awt.Cursor;
 import java.awt.Graphics2D;
 
+import br.com.hamsterpellet.fullscreen.GamePanel;
 import br.com.hamsterpellet.fullscreen.ScreenPage.MouseStatus;
 
 public class ScreenColoredCursoredRect extends ScreenRect {
 
 	public static final Color DEFAULT_FILL_COLOR = Color.PINK;
 	
-	protected ScreenColoredCursoredRect(int screenWidth, int screenHeight, int width, int height, ScreenRect parent) {
-		super(screenWidth, screenHeight, width, height, parent);
+	protected ScreenColoredCursoredRect(double width, double height, ScreenRect parent) {
+		/** NEVER CALL THIS, CALL FACTORY() INSTEAD **/
+		
+		super(width, height, parent);
 		hoverCursor = defaultCursor = Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR);
 		fillColor = fillColorHover = fillColorPress = DEFAULT_FILL_COLOR;
 		isFillColorHoverSet = isFillColorPressSet = false;
 	}
-	
-	public static ScreenColoredCursoredRect create(int screenWidth, int screenHeight, int width, int height, ScreenRect parent) {
-		return new ScreenColoredCursoredRect(screenWidth, screenHeight, width, height, parent);
+	private static ScreenColoredCursoredRect factory(double width, double height, ScreenRect parent) {
+		ScreenColoredCursoredRect r = new ScreenColoredCursoredRect(width, height, parent);
+		r.getParent().addChild(r);
+		return r;
 	}
 	
-	public static ScreenColoredCursoredRect create(int screenWidth, int screenHeight, int width, int height, ScreenRect parent, Color color) {
-		ScreenColoredCursoredRect rect = create(screenWidth, screenHeight, width, height, parent);
+	public static ScreenColoredCursoredRect create(double width, double height, ScreenRect parent) {
+		return factory(width, height, parent);
+	}
+	
+	public static ScreenColoredCursoredRect create(double width, double height,
+			ScreenRect parent, Color color) {
+		ScreenColoredCursoredRect rect = create(width, height, parent);
 		rect.fillColor = rect.fillColorHover = rect.fillColorPress = color;
 		return rect;
 	}
@@ -84,26 +93,27 @@ public class ScreenColoredCursoredRect extends ScreenRect {
 	
 
 	@Override
-	public void onMouseIn(GamePanel panel) {
-		if (panel != null && hoverCursor != null) {
-			panel.setCursor(hoverCursor);
+	public void onMouseIn() {
+		if (hoverCursor != null) {
+			GamePanel.setCursor(hoverCursor);
 		}
 	}
 
 	@Override
-	public void onMouseOut(GamePanel panel) {
-		if (panel != null && defaultCursor != null) {
-			panel.setCursor(defaultCursor);
+	public void onMouseOut() {
+		if (defaultCursor != null) {
+			GamePanel.setCursor(defaultCursor);
 		}
 	}
 
 	@Override
 	public void paint(Graphics2D g) {
+		super.paint(g);
+		
 		Color oldColor = g.getColor();
 		g.setColor(getCurrentFillColor());
-		g.fillRect(relativeUpperX, relativeUpperY, width, height);
+		g.fillRect(getUpperXOnScreen(), getUpperYOnScreen(), getWidthOnScreen(), getHeightOnScreen());
 		g.setColor(oldColor);
 	}
 	
-
 }

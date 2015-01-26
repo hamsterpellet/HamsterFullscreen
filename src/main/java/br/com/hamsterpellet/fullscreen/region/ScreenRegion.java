@@ -1,8 +1,9 @@
-package br.com.hamsterpellet.fullscreen;
+package br.com.hamsterpellet.fullscreen.region;
 
 import java.awt.Graphics2D;
 import java.awt.Point;
 
+import br.com.hamsterpellet.fullscreen.GamePanel;
 import br.com.hamsterpellet.fullscreen.ScreenPage.MouseStatus;
 
 public abstract class ScreenRegion {
@@ -24,33 +25,28 @@ public abstract class ScreenRegion {
 	/** BASE STUFF **/
 	
 	private static int idCounter = 0;
-	private final int id;
-	protected final int screenWidth;
-	protected final int screenHeight;
+	public final int id;
 	protected MouseStatus currentMouseStatus;
 	
-	protected ScreenRegion(int screenWidth, int screenHeight) {
-		this.screenWidth = screenWidth;
-		this.screenHeight = screenHeight;
+	protected ScreenRegion() {
 		id = idCounter++;
 		currentMouseStatus = MouseStatus.NORMAL;
 	}
 	
-	public final int getId() {
-		return id;
-	}
 	public final boolean isHovered() {
 		return currentMouseStatus != MouseStatus.NORMAL;
 	}
 	
 	/** SCREEN REGION STUFF **/
 	
-	public final boolean contains(Point p) {
-		if (p == null) throw new IllegalArgumentException("Point can't be null.");
-		return contains(p.x, p.y);
+	public final boolean containsOnScreen(int x, int y) {
+		return contains((double) x / GamePanel.getScreenWidth(), (double) y / GamePanel.getScreenHeight());
+	}
+	public final boolean containsOnScreen(Point p) {
+		return containsOnScreen(p.x, p.y);
 	}
 	
-	public abstract boolean contains(int x, int y);
+	public abstract boolean contains(double x, double y);
 	
 	public void paint(Graphics2D g) {}
 	
@@ -74,19 +70,19 @@ public abstract class ScreenRegion {
 		onMouseDownListener = r;
 	}
 	
-	public final void registerMouseOut(GamePanel panel) {
+	public final void registerMouseOut() {
 		currentMouseStatus = MouseStatus.NORMAL;
-		onMouseOut(panel);
+		onMouseOut();
 		if (onMouseOutListener != null) onMouseOutListener.run();
 	}
-	public void onMouseOut(GamePanel panel) {};
+	public void onMouseOut() {};
 	
-	public final void registerMouseIn(GamePanel panel) {
+	public final void registerMouseIn() {
 		currentMouseStatus = MouseStatus.HOVER;
-		onMouseIn(panel);
+		onMouseIn();
 		if (onMouseInListener != null) onMouseInListener.run();
 	}
-	public void onMouseIn(GamePanel panel) {};
+	public void onMouseIn() {};
 	
 	public final void registerMouseDown() {
 		currentMouseStatus = MouseStatus.PRESSED;

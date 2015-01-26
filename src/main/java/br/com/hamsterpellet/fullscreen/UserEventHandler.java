@@ -105,18 +105,12 @@ public abstract class UserEventHandler {
 	/** CONSTRUCTOR AND STUFF **/
 
 	private boolean usingDefaultDebugger;
-	private GamePanel gamePanel;
-	private ScreenPage currentPage;
-	
-	protected final void setGamePanel(GamePanel panel) {
-		// second part of the if could be removed because whatever but I'll leave it there for clarity
-		// can only set game panel once, a.k.a. when gamePanel is null, set it to something else, then its over, no more changes.
-		if (gamePanel == null && panel != null) gamePanel = panel;
-	}
-	protected final GamePanel getGamePanel() {
-		return gamePanel;
+	private ScreenPage page;
+	public final void setScreenPage(ScreenPage page) {
+		if (this.page == null) this.page = page;
 	}
 	
+	/*
 	protected final int getScreenWidth() {
 		return getGamePanel().getDisplayMode().getWidth();
 	}
@@ -124,25 +118,16 @@ public abstract class UserEventHandler {
 		return getGamePanel().getDisplayMode().getHeight();
 	}
 	
-	protected final void setScreenPage(ScreenPage page) {
-		//if (currentPage != null) currentPage.onDestroy();
-		if (page != null) currentPage = page;
-	}
-	protected final ScreenPage getScreenPage() {
-		return currentPage;
-	}
-	
 	@SuppressWarnings("serial")
 	public static final class UEHandlerNotReadyException extends RuntimeException {}
 	protected final boolean isReady() {
 		return gamePanel != null;
 	}
+	*/
 	
 	/** CONSTRUCTOR **/
 	
 	protected UserEventHandler() {
-		gamePanel = null;
-		currentPage = new ScreenPage();
 		debugger = new Debugger() {
 			@Override
 			public final void showMessage(String message, String messagePool) { /* do nothing! */ }
@@ -157,20 +142,18 @@ public abstract class UserEventHandler {
 	protected final void _onInit(Graphics2D g) {
 		debugger.addMessage("onInit()", 0);
 		onInit(g);
-		if (gamePanel != null && currentPage != null) {
-			Point mouseLoc = gamePanel.getMouseLocation();
-			if (mouseLoc == null) {
-				mouseLoc = new Point(getScreenWidth() / 2, getScreenHeight() / 2);
-			}
-			currentPage.registerHover(mouseLoc, null);
+		Point mouseLoc = GamePanel.getMouseLocation();
+		if (mouseLoc == null) {
+			mouseLoc = new Point(GamePanel.getScreenWidth() / 2, GamePanel.getScreenHeight() / 2);
 		}
+		page.registerHover(mouseLoc);
 		debugger.clear(0);
 	}
 	protected final void _onUpdate() {
 		onUpdate();
 	}
 	protected final void _onRender(final Graphics2D g) {
-		currentPage.paint(g);
+		page.paint(g);
 		debugger.onRender(g);
 		onRender(g);
 	}
@@ -220,14 +203,14 @@ public abstract class UserEventHandler {
 	protected final boolean _onMouseLeftButtonPressed(final Point mouseLoc) {
 		debugger.addMessage("onMouseLeftButtonPressed(Point(" + mouseLoc.x + ", " + mouseLoc.y + "))", 0);
 		boolean b = onMouseLeftButtonPressed(mouseLoc);
-		currentPage.registerMouseDown(mouseLoc);
+		page.registerMouseDown(mouseLoc);
 		debugger.clear(0);
 		return b;
 	}
 	protected final boolean _onMouseLeftButtonReleased(final Point mouseLoc) {
 		debugger.addMessage("onMouseLeftButtonReleased(Point(" + mouseLoc.x + ", " + mouseLoc.y + "))", 0);
 		boolean b = onMouseLeftButtonReleased(mouseLoc);
-		currentPage.registerMouseUp(mouseLoc);
+		page.registerMouseUp(mouseLoc);
 		debugger.clear(0);
 		return b;
 	}
@@ -270,7 +253,7 @@ public abstract class UserEventHandler {
 	protected final void _onMouseMoved(final Point mouseCurrentLoc, final Point mouseLastLoc, double distance, boolean dragged) {
 		debugger.addMessage("onMouseMoved(Point(" + mouseCurrentLoc.x + ", " + mouseCurrentLoc.y + "), Point(" +
 				mouseLastLoc.x + ", " + mouseLastLoc.y + "), " + distance + ", " + dragged + ")", 0);
-		currentPage.registerHover(mouseCurrentLoc, getGamePanel());
+		page.registerHover(mouseCurrentLoc);
 		onMouseMoved(mouseCurrentLoc, mouseLastLoc, distance, dragged);
 		debugger.clear(0);
 	}

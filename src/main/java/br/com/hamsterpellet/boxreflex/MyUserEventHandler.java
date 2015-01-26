@@ -2,13 +2,19 @@ package br.com.hamsterpellet.boxreflex;
 
 
 import java.awt.Color;
+import java.awt.Cursor;
 import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.event.KeyEvent;
+import java.io.IOException;
+import java.net.MalformedURLException;
 
 import javax.swing.JOptionPane;
 
 import br.com.hamsterpellet.fullscreen.GamePanel;
+import br.com.hamsterpellet.fullscreen.ScreenPage;
+import br.com.hamsterpellet.fullscreen.ScreenPage.OneDimPosition;
+import br.com.hamsterpellet.fullscreen.region.ScreenImageRect;
 import br.com.hamsterpellet.fullscreen.UserEventHandler;
 
 public class MyUserEventHandler extends UserEventHandler {
@@ -20,7 +26,6 @@ public class MyUserEventHandler extends UserEventHandler {
 		JOptionPane.showMessageDialog(null, "Pressione OK quando estiver pronto para entrar no modo fullscreen.");
 		try {
 			final MyUserEventHandler handler = new MyUserEventHandler();
-			
 			Debugger d = new Debugger() {
 				@Override
 				protected void showMessage(String message, String messagePool) {
@@ -35,12 +40,32 @@ public class MyUserEventHandler extends UserEventHandler {
 			d.setDebugLevel(2);
 			d.disableAutoClear();
 			handler.setDebugger(d);
+
+			GamePanel.prepareLaunch(30, Color.BLACK, KeyEvent.VK_ESCAPE);
 			
-			GamePanel.launchGame(30, handler, Color.BLACK, KeyEvent.VK_ESCAPE);
+			ScreenPage index = ScreenPage.create(handler);
+			
+			ScreenImageRect exitButton = ScreenImageRect.create(null, "alea_jacta_est.bmp", true);
+			exitButton.setMouseUpListener(new Runnable() {
+				@Override
+				public void run() {
+					GamePanel.exit();
+				}
+			});
+			exitButton.setHoverCursor(Cursor.HAND_CURSOR);
+			exitButton.setPosition(OneDimPosition.CENTER, OneDimPosition.CENTER);
+			index.addRegion(exitButton);
+			
+			GamePanel.launch(index);
+			
 			// please avoid doing anything after calling launchGame()
 			//   because it might bug the focus of the fullscreened window
-		} catch (GamePanel.FullscreenException e) {
+		} catch (GamePanel.UnableToFullscreenException e) {
 			JOptionPane.showMessageDialog(null, "Não foi possível entrar em modo fullscreen!");
+		} catch (MalformedURLException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
 		}
 		// please avoid doing anything after calling launchGame()
 		//   because it might bug the focus of the fullscreened window
@@ -48,13 +73,10 @@ public class MyUserEventHandler extends UserEventHandler {
 	
 	/** ################################ **/
 	/** GAME CONTROLLING IMPLEMENTATIONS **/
-
-	private Game game;
 	
 	@Override
 	public void onInit(Graphics2D g) {
-		game = Game.start(getScreenWidth(), getScreenHeight(), getDebugger());
-		setScreenPage(game.getPage());
+		getDebugger().addMessage("yay", 3);
 	}
 
 	@Override
@@ -96,16 +118,6 @@ public class MyUserEventHandler extends UserEventHandler {
 	
 	@Override
 	public boolean onKeyClicked(String text, int keyCode) {
-		if (keyCode == KeyEvent.VK_SPACE) {
-			Box activeBox = game.getActiveBox();
-			if (activeBox != null) {
-				game.unHighlightOnBox(activeBox.x, activeBox.y);
-				game.changePattern();
-				game.highlightOnBox(activeBox.x, activeBox.y);
-			} else {
-				game.changePattern();
-			}
-		}
 		return true;
 	}
 

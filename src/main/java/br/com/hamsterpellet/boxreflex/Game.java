@@ -4,11 +4,11 @@ package br.com.hamsterpellet.boxreflex;
 import java.awt.Color;
 import java.util.HashSet;
 
-import br.com.hamsterpellet.fullscreen.ScreenColoredCursoredRect;
 import br.com.hamsterpellet.fullscreen.ScreenPage;
 import br.com.hamsterpellet.fullscreen.ScreenPage.MouseStatus;
-import br.com.hamsterpellet.fullscreen.ScreenRect;
 import br.com.hamsterpellet.fullscreen.UserEventHandler.Debugger;
+import br.com.hamsterpellet.fullscreen.region.ScreenColoredCursoredRect;
+import br.com.hamsterpellet.fullscreen.region.ScreenRect;
 
 public class Game {
 
@@ -29,7 +29,8 @@ public class Game {
 		this.screenHeight = screenHeight;
 		boxGrid = new Box[5][5];
 		rectGrid = new ScreenRect[5][5];
-		page = new ScreenPage();
+		page = null;
+		//page = new ScreenPage();
 		this.debugger = debugger;
 	}
 	
@@ -78,7 +79,7 @@ public class Game {
 				final int fi = i;
 				final int fj = j;
 				final Box activeBox = new Box(i, j);
-				final ScreenColoredCursoredRect rect = ScreenColoredCursoredRect.create(screenWidth, screenHeight, 50, 50, null);
+				final ScreenColoredCursoredRect rect = ScreenColoredCursoredRect.create(0.05, 0.05, null);
 				rect.setPosition((int)(screenWidth / 2 - 125 + j * 50),(int)(screenHeight / 2 - 125 + i * 50));
 				rect.setFillColor(activeBox.getColor());
 				rect.setFillColor(Color.YELLOW, MouseStatus.PRESSED);

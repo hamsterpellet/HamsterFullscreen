@@ -1,41 +1,60 @@
-package br.com.hamsterpellet.fullscreen;
+package br.com.hamsterpellet.fullscreen.region;
 
-import java.awt.Point;
 import java.util.ArrayList;
 
-import br.com.hamsterpellet.fullscreen.ScreenPage.BasePos;
+import br.com.hamsterpellet.fullscreen.GamePanel;
 import br.com.hamsterpellet.fullscreen.ScreenPage.Direction;
-import br.com.hamsterpellet.fullscreen.ScreenPage.OutOfScreenException;
+import br.com.hamsterpellet.fullscreen.ScreenPage.OneDimPosition;
+import br.com.hamsterpellet.fullscreen.ScreenPage.OutOfParentException;
 import br.com.hamsterpellet.fullscreen.ScreenPage.RelativePos;
 
 
 public class ScreenRect extends ScreenRegion {
 
-	protected int relativeUpperX;
-	protected int relativeUpperY;
-	protected final int width;
-	protected final int height;
+	protected double relativeUpperX;
+	protected double relativeUpperY;
+	protected final double width;
+	protected final double height;
 	
-	private ScreenRect parent; // parent can be reset by makeTable() method
+	private final ScreenRect parent;
 	protected final ArrayList<ScreenRect> children;
 	
-	protected ScreenRect(int screenWidth, int screenHeight, int width, int height, ScreenRect parent) {
-		super(screenWidth, screenHeight);
-		if (width < 0 || width > screenWidth || height < 0 || height > screenHeight) {
-			throw new OutOfScreenException();
+	private static boolean rootAlreadyCreated;
+	private static final ScreenRect root;
+	static {
+		rootAlreadyCreated = false;
+		root = new ScreenRect(1, 1, null);
+		root.setPosition(0, 0);
+		rootAlreadyCreated = true;
+	}
+	
+	protected ScreenRect(double width, double height, ScreenRect parent) {
+		/** NEVER CALL THIS, CALL FACTORY() INSTEAD **/
+		
+		// pass NULL as parent for the parent to be auto-set to the root.
+		if (width < 0 || width > 1 || height < 0 || height > 1) {
+			throw new OutOfParentException();
 		}
 		this.width = width;
 		this.height = height;
-		
-		this.parent = parent;
+		if (rootAlreadyCreated && parent == null) {
+			this.parent = root;
+		} else {
+			this.parent = parent;
+		}
 		this.children = new ArrayList<ScreenRect>();
 	}
+	private static ScreenRect factory(double width, double height, ScreenRect parent) {
+		ScreenRect r = new ScreenRect(width, height, parent);
+		r.parent.addChild(r);
+		return r;
+	}
 	
-	public static ScreenRect create(int screenWidth, int screenHeight, int width, int height, ScreenRect parent) {
-		return new ScreenRect(screenWidth, screenHeight, width, height, parent);
+	public static ScreenRect create(double width, double height, ScreenRect parent) {
+		return factory(width, height, parent);
 	}
 
-	public final boolean contains(int x, int y) {
+	public final boolean contains(double x, double y) {
 		return relativeUpperX < x && x < relativeUpperX + width && relativeUpperY < y && y < relativeUpperY + height;
 	}
 	
@@ -45,9 +64,11 @@ public class ScreenRect extends ScreenRegion {
 		children.add(child);
 	}
 	public final ScreenRect getParent() {
+		if (this == root) throw new RuntimeException("Do NOT ask for the root's parent!");
 		return parent;
 	}
 
+	/*
 	public static final ScreenRect makeTable(ScreenRect[][] cells, int screenWidth, int screenHeight, ScreenRect parent) {
 		cells[0][0].setPosition(0, 0);
 		int totalHeight = 0;
@@ -73,68 +94,46 @@ public class ScreenRect extends ScreenRegion {
 		}
 		return container;
 	}
+	*/
 	
 	/** MOVE & SETPOS STUFF **/
 	
-	private final boolean isOutOfScreen() {
+	private final boolean isOutOfParent() {
 		if (relativeUpperX < 0 || relativeUpperY < 0) return true;
-		int parentWidth = screenWidth;
-		int parentHeight = screenHeight;
-		if (parent != null) {
-			parentWidth = parent.width;
-			parentHeight = parent.height;
-		}
-		return relativeUpperX + width > parentWidth || relativeUpperY + height > parentHeight;
+		return relativeUpperX + width > parent.width || relativeUpperY + height > parent.height;
 	}
 	
-	public final void move(int deltaX, int deltaY) {
+	public final void move(double deltaX, double deltaY) {
+		if (deltaX == 0 && deltaY == 0) return;
 		relativeUpperX += deltaX;
 		relativeUpperY += deltaY;
-		if (isOutOfScreen()) throw new OutOfScreenException();
+		if (isOutOfParent()) throw new OutOfParentException();
 		for (ScreenRect child : children) {
 			child.move(deltaX, deltaY);
 		}
 	}
 	
-	public final void move(Direction direction, int howMuch) {
+	public final void move(Direction direction, double howMuch) {
 		if (direction == Direction.UP) move(0, -howMuch);
 		else if (direction == Direction.DOWN) move(0, howMuch);
 		else if (direction == Direction.LEFT) move(-howMuch, 0);
 		else /*if (direction == Direction.RIGHT)*/ move(howMuch, 0);
 	}
 	
-	public final void movePercentOfScreen(Direction direction, double howMuchPercent) {
-		if (direction == Direction.UP || direction == Direction.DOWN) {
-			move(direction, (int) (howMuchPercent * (screenHeight - height)));
-		} else {
-			move(direction, (int) (howMuchPercent * (screenWidth - width)));
-		}
+	public final void setPosition(double upperX, double upperY) {
+		move(upperX - this.relativeUpperX, upperY - this.relativeUpperY);
 	}
 	
-	public final void movePercentOfScreen(double percentDeltaX, double percentDeltaY) {
-		move((int)(percentDeltaX * (screenWidth - width)), (int)(percentDeltaY * (screenHeight - height)));
-	}
-	
-	public final void setPosition(int upperX, int upperY) {
-		int deltaX = upperX - this.relativeUpperX;
-		int deltaY = upperY - this.relativeUpperY;
-		move(deltaX, deltaY);
-	}
-	
-	public final void setPosition(BasePos screenXPos, BasePos screenYPos) {
-		int newUpperX, newUpperY;
-		newUpperX = (int) (0.5 * screenXPos.multiplier * (screenWidth - width));
-		newUpperX += (int) (width * screenXPos.centerShift);
-		newUpperY = (int) (0.5 * screenYPos.multiplier * (screenHeight - height));
-		newUpperY += (int) (height * screenYPos.centerShift);
-		setPosition(newUpperX, newUpperY);
+	public final void setPosition(OneDimPosition xPos, OneDimPosition yPos) {
+		setPosition(xPos.screenPosition + xPos.dimensionShift * width,
+				yPos.screenPosition + yPos.dimensionShift * height);
 	}
 	
 	public final void setPosition(ScreenRect reference, RelativePos relPos) {
 		setPosition(reference, relPos, 0);
 	}
 	public final void setPosition(ScreenRect reference, RelativePos relPos, int padding) {
-		int newUpperX,  newUpperY;
+		double newUpperX,  newUpperY;
 		if (relPos == RelativePos.ABOVE) {
 			newUpperX = reference.relativeUpperX;
 			newUpperY = reference.relativeUpperY - padding - height;
@@ -153,32 +152,47 @@ public class ScreenRect extends ScreenRegion {
 
 	/** PUBLIC USAGE GETTERS **/
 	
-	public final int getRelativeUpperX() {
+	public final double getRelativeUpperX() {
 		return relativeUpperX;
 	}
-	public final int getRelativeUpperY() {
+	public final double getRelativeUpperY() {
 		return relativeUpperY;
 	}
-	public final Point getRelativeCenter() {
-		return new Point((getRelativeUpperX() + width) / 2, (getRelativeUpperY() + height) / 2);
-	}
 	
-	public final int getUpperX() {
+	public final double getUpperX() {
 		if (parent == null) return relativeUpperX;
 		return parent.getUpperX() + relativeUpperX;
 	}
-	public final int getUpperY() {
+	public final double getUpperY() {
 		if (parent == null) return relativeUpperY;
 		return parent.getUpperY() + relativeUpperY;
 	}
-	public final Point getCenter() {
-		return new Point((getUpperX() + width) / 2, (getUpperY() + height) / 2);
+	
+	public final int getUpperXOnScreen() {
+		return (int) (getUpperX() * GamePanel.getScreenWidth());
+	}
+	public final int getUpperYOnScreen() {
+		return (int) (getUpperY() * GamePanel.getScreenHeight());
 	}
 	
-	public final int getWidth() {
+	public final double getWidth() {
 		return width;
 	}
-	public final int getHeight() {
+	public final double getHeight() {
 		return height;
+	}
+	
+	public final int getWidthOnScreen() {
+		return (int) (width * GamePanel.getScreenWidth());
+	}
+	public final int getHeightOnScreen() {
+		return (int) (height * GamePanel.getScreenHeight());
+	}
+	
+	public final int getLowerXOnScreen() {
+		return getUpperXOnScreen() + getWidthOnScreen();
+	}
+	public final int getLowerYOnScreen() {
+		return getUpperYOnScreen() + getHeightOnScreen();
 	}
 }
