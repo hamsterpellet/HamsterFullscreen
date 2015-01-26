@@ -56,6 +56,7 @@ public abstract class ScreenRegion {
 	private Runnable onMouseOutListener = null;
 	private Runnable onMouseUpListener = null;
 	private Runnable onMouseDownListener = null;
+	private Runnable onMouseClickListener = null;
 	
 	public final void setMouseInListener(Runnable r) {
 		onMouseInListener = r;
@@ -68,6 +69,9 @@ public abstract class ScreenRegion {
 	}
 	public final void setMouseDownListener(Runnable r) {
 		onMouseDownListener = r;
+	}
+	public final void setMouseClickListener(Runnable r) {
+		onMouseClickListener = r;
 	}
 	
 	public final void registerMouseOut() {
@@ -92,10 +96,16 @@ public abstract class ScreenRegion {
 	public void onMouseDown() {};
 	
 	public final void registerMouseUp() {
+		boolean isThisAClick = currentMouseStatus == MouseStatus.PRESSED;
 		currentMouseStatus = MouseStatus.HOVER;
 		onMouseUp();
 		if (onMouseUpListener != null) onMouseUpListener.run();
+		if (isThisAClick) {
+			onMouseClick();
+			if (onMouseClickListener != null) onMouseClickListener.run();			
+		}
 	}
 	public void onMouseUp() {};
+	public void onMouseClick() {};
 	
 }
