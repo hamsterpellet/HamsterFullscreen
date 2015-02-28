@@ -7,7 +7,7 @@ import java.util.HashSet;
 import br.com.hamsterpellet.fullscreen.ScreenPage;
 import br.com.hamsterpellet.fullscreen.ScreenPage.MouseStatus;
 import br.com.hamsterpellet.fullscreen.region.Debugger;
-import br.com.hamsterpellet.fullscreen.region.ScreenColoredCursoredRect;
+import br.com.hamsterpellet.fullscreen.region.ScreenBasicRect;
 import br.com.hamsterpellet.fullscreen.region.ScreenRect;
 
 public class Game {
@@ -50,8 +50,8 @@ public class Game {
 			for (int k = 0; k < boxGrid.length; k++) {
 				for (int l = 0; l < boxGrid[k].length; l++) {
 					if (boxesAffected.contains(boxGrid[k][l])) {
-						((ScreenColoredCursoredRect) rectGrid[k][l]).setFillColor(boxGrid[k][l].getHoverColor());
-						((ScreenColoredCursoredRect) rectGrid[k][l]).setFillColor(boxGrid[k][l].getHoverColor(), MouseStatus.HOVER);
+						((ScreenBasicRect) rectGrid[k][l]).setFillColor(boxGrid[k][l].getHoverColor());
+						((ScreenBasicRect) rectGrid[k][l]).setFillColor(boxGrid[k][l].getHoverColor(), MouseStatus.HOVER);
 					}
 				}
 			}
@@ -65,8 +65,8 @@ public class Game {
 			for (int k = 0; k < boxGrid.length; k++) {
 				for (int l = 0; l < boxGrid[k].length; l++) {
 					if (boxesAffected.contains(boxGrid[k][l])) {
-						((ScreenColoredCursoredRect) rectGrid[k][l]).setFillColor(boxGrid[k][l].getColor());
-						((ScreenColoredCursoredRect) rectGrid[k][l]).setFillColor(boxGrid[k][l].getColor(), MouseStatus.HOVER);
+						((ScreenBasicRect) rectGrid[k][l]).setFillColor(boxGrid[k][l].getColor());
+						((ScreenBasicRect) rectGrid[k][l]).setFillColor(boxGrid[k][l].getColor(), MouseStatus.HOVER);
 					}
 				}
 			}
@@ -79,7 +79,7 @@ public class Game {
 				final int fi = i;
 				final int fj = j;
 				final Box activeBox = new Box(i, j);
-				final ScreenColoredCursoredRect rect = ScreenColoredCursoredRect.create(0.05, 0.05, null);
+				final ScreenBasicRect rect = ScreenBasicRect.create(0.05, 0.05, null);
 				rect.setPosition((int)(screenWidth / 2 - 125 + j * 50),(int)(screenHeight / 2 - 125 + i * 50));
 				rect.setFillColor(activeBox.getColor());
 				rect.setFillColor(Color.YELLOW, MouseStatus.PRESSED);
@@ -104,9 +104,9 @@ public class Game {
 							HashSet<Box> boxesAffected = getActivePattern().useAsFilterForBoxGrid(boxGrid, fi, fj);
 							for (Box box : boxesAffected) {
 								box.change();
-								((ScreenColoredCursoredRect) rectGrid[box.x][box.y]).setFillColor(box.getColor());
-								((ScreenColoredCursoredRect) rectGrid[box.x][box.y]).setFillColor(box.getHoverColor(), MouseStatus.HOVER);
-								((ScreenColoredCursoredRect) rectGrid[box.x][box.y]).setFillColor(Color.WHITE, MouseStatus.PRESSED);				
+								((ScreenBasicRect) rectGrid[box.x][box.y]).setFillColor(box.getColor());
+								((ScreenBasicRect) rectGrid[box.x][box.y]).setFillColor(box.getHoverColor(), MouseStatus.HOVER);
+								((ScreenBasicRect) rectGrid[box.x][box.y]).setFillColor(Color.WHITE, MouseStatus.PRESSED);				
 							}
 						}
 					}

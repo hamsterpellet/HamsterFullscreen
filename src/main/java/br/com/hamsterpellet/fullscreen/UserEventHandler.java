@@ -14,7 +14,8 @@ public abstract class UserEventHandler {
 	// Game Controlling
 	protected abstract void onInit(final Graphics2D g);
 	protected abstract void onUpdate();
-	protected abstract void onRender(final Graphics2D g);
+	protected abstract void onBeforeRender(final Graphics2D g);
+	protected abstract void onAfterRender(final Graphics2D g);
 	protected abstract void onNormalExit();
 	protected abstract void onErrorExit();
 	
@@ -47,7 +48,7 @@ public abstract class UserEventHandler {
 	public final Debugger getDebugger() {
 		return debugger;
 	}
-	protected final void setDebugger(Debugger debugger) {
+	public final void setDebugger(Debugger debugger) {
 		if (usingDefaultDebugger) {
 			this.debugger = debugger;
 			usingDefaultDebugger = false;
@@ -80,9 +81,10 @@ public abstract class UserEventHandler {
 		onUpdate();
 	}
 	protected final void _onRender(final Graphics2D g) {
+		onBeforeRender(g);
 		GamePanel.getActivePage().paint(g);
+		onAfterRender(g);
 		debugger.onRender(g);
-		onRender(g);
 	}
 	protected final void _onNormalExit() {
 		onNormalExit();

@@ -87,6 +87,7 @@ public class GamePanel implements Runnable, KeyListener, MouseListener, MouseMot
 	
 	public static void switchPage(ScreenPage newPage) {
 		if (!isRunning()) throw new FullscreenNotLaunchedException();
+		newPage.setJustBorn(true);
 		singleton.currentScreenPage = newPage;
 	}
 	
@@ -184,7 +185,7 @@ public class GamePanel implements Runnable, KeyListener, MouseListener, MouseMot
 	            // Update
 	            if (currentScreenPage.wasJustBorn()) {
 	            	currentScreenPage.getUserEventHandler()._onInit(bufferGraphics);
-	            	currentScreenPage.unsetJustBorn();
+	            	currentScreenPage.setJustBorn(false);
 	            } else {
 	            	currentScreenPage.getUserEventHandler()._onUpdate();
 	            }
@@ -192,9 +193,8 @@ public class GamePanel implements Runnable, KeyListener, MouseListener, MouseMot
 	            // Draw on buffer (a.k.a. render)
 	            bufferGraphics.setColor(backgroundColor);
 	            bufferGraphics.fillRect(0, 0, displayMode.getWidth(), displayMode.getHeight());
-	            currentScreenPage.paint(bufferGraphics);
-	            
 	            currentScreenPage.getUserEventHandler()._onRender(bufferGraphics);
+	            
 	            // Actually draw
 	            screenManager.drawFromBuffer();
 	            bufferGraphics.dispose();

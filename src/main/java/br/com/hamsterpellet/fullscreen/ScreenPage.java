@@ -14,8 +14,8 @@ public final class ScreenPage {
 	private ScreenRegion[] regionArray;
 
 	private boolean justBorn = true; // used by GamePanel to decide to call onInit() or not
-	public void unsetJustBorn() {
-		justBorn = false;
+	public void setJustBorn(boolean justBorn) {
+		this.justBorn = justBorn;
 	}
 	public boolean wasJustBorn() {
 		return justBorn;

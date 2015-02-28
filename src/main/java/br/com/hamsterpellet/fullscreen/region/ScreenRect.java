@@ -42,22 +42,26 @@ public class ScreenRect extends ScreenRegion {
 	}
 	
 	/** FAMILY STUFF **/
-
-	public static final ScreenRect makeTable(ScreenRect parentForContainer, ScreenRect[][] cells) {
+	
+	public static final ScreenRect makeTable(ScreenRect parentForContainer, double rowPadding, double colPadding, ScreenRect[][] cells) {
+		if (rowPadding >= 1 || colPadding >= 1) throw new IllegalArgumentException("Padding is percentage!");
 		// CELLS IN THE SAME ROW MUST HAVE THE SAME HEIGHT, OTHERWISE ILLEGALARGUMENTEXCEPTION
 		cells[0][0].setPosition(0, 0);
 		double totalHeight = 0;
 		double totalWidth = 0;
 		for (int i = 0; i < cells.length; i++) {
-			if (i != 0) cells[i][0].setPosition(cells[i-1][0], RelativePos.BELOW);
+			if (i != 0) {
+				cells[i][0].setPosition(cells[i-1][0], RelativePos.BELOW, colPadding);
+				totalHeight += colPadding;
+			}
 			totalHeight += cells[i][0].height;
 			double thisRowWidth = cells[i][0].width;
 			for (int j = 1; j < cells[i].length; j++) {
 				if (cells[i][j].height != cells[i][0].height) {
 					throw new IllegalArgumentException("Cells from the same row must have equal heights");
 				}
-				cells[i][j].setPosition(cells[i][j-1], RelativePos.RIGHT);
-				thisRowWidth += cells[i][j].width;
+				cells[i][j].setPosition(cells[i][j-1], RelativePos.RIGHT, rowPadding);
+				thisRowWidth += cells[i][j].width + rowPadding;
 			}
 			if (thisRowWidth > totalWidth) totalWidth = thisRowWidth;
 		}
@@ -70,20 +74,20 @@ public class ScreenRect extends ScreenRegion {
 		return container;
 	}
 	
-	public static final ScreenRect makeColumnTable(ScreenRect parentForContainer, ScreenRect... cells) {
+	public static final ScreenRect makeColumnTable(ScreenRect parentForContainer, double padding, ScreenRect... cells) {
 		ScreenRect[][] tableCells = new ScreenRect[cells.length][1];
 		for (int i = 0; i < cells.length; i++) {
 			tableCells[i][0] = cells[i];
 		}
-		return makeTable(parentForContainer, tableCells);
+		return makeTable(parentForContainer, 0, padding, tableCells);
 	}
 	
-	public static final ScreenRect makeRowTable(ScreenRect parentForContainer, ScreenRect... cells) {
+	public static final ScreenRect makeRowTable(ScreenRect parentForContainer, double padding, ScreenRect... cells) {
 		ScreenRect[][] tableCells = new ScreenRect[1][cells.length];
 		for (int i = 0; i < cells.length; i++) {
 			tableCells[0][i] = cells[i];
 		}
-		return makeTable(parentForContainer, tableCells);
+		return makeTable(parentForContainer, padding, 0, tableCells);
 	}
 	
 		
@@ -130,7 +134,7 @@ public class ScreenRect extends ScreenRegion {
 	public final void setPosition(ScreenRect reference, RelativePos relPos) {
 		setPosition(reference, relPos, 0);
 	}
-	public final void setPosition(ScreenRect reference, RelativePos relPos, int padding) {
+	public final void setPosition(ScreenRect reference, RelativePos relPos, double padding) {
 		double newUpperX,  newUpperY;
 		if (relPos == RelativePos.ABOVE) {
 			newUpperX = reference.relativeUpperX;

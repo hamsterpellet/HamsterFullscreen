@@ -10,7 +10,7 @@ import java.awt.Point;
 import br.com.hamsterpellet.fullscreen.GamePanel;
 import br.com.hamsterpellet.fullscreen.ScreenPage.MouseStatus;
 
-public class ScreenStringRect extends ScreenColoredCursoredRect {
+public class ScreenStringRect extends ScreenBasicRect {
 	
 	private String text;
 	private final Font font;

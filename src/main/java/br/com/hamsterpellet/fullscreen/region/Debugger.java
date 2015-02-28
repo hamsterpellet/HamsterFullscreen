@@ -45,7 +45,7 @@ public abstract class Debugger {
 		renderMessage(g, messagePool);
 	}
 	
-	public void setDebugLevel(int level) {
+	public void setDebugMinimumLevel(int level) {
 		debugLevel = level;
 	}
 	

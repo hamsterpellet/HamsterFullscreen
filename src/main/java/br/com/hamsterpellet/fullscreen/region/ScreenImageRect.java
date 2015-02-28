@@ -12,7 +12,7 @@ import javax.imageio.ImageIO;
 import br.com.hamsterpellet.fullscreen.GamePanel;
 import br.com.hamsterpellet.fullscreen.ScreenPage.MouseStatus;
 
-public class ScreenImageRect extends ScreenColoredCursoredRect {
+public class ScreenImageRect extends ScreenBasicRect {
 	
 	/*********************************************/
 	
