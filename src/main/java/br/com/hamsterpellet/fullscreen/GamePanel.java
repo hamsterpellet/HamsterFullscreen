@@ -179,6 +179,7 @@ public class GamePanel implements Runnable, KeyListener, MouseListener, MouseMot
 	        	
 	            startTimeNanos = System.nanoTime();
 	            Graphics2D bufferGraphics = screenManager.getGraphics();
+	            //bufferGraphics.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.5F));
 	            
 	            // Update
 	            if (currentScreenPage.wasJustBorn()) {

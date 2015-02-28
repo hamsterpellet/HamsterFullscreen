@@ -3,9 +3,9 @@ package br.com.hamsterpellet.fullscreen.region;
 
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
+import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
-import java.net.URL;
 
 import javax.imageio.ImageIO;
 
@@ -93,7 +93,7 @@ public class ScreenImageRect extends ScreenColoredCursoredRect {
 	
 	/*********************************************/
 	
-	public static final String baseURL = "file:///E:/Programming/Java/EclipseADTWorkspace/Saturamini";
+	public static final String baseURL = "file:///E:/Programming/Java/Repositories/BoxReflex";
 	
 	public static final String hoverSuffix = "_hover";
 	public static final String pressSuffix = "_press";
@@ -107,7 +107,9 @@ public class ScreenImageRect extends ScreenColoredCursoredRect {
 	}
 	
 	private static BufferedImage getImageFromURL(String filename) throws MalformedURLException, IOException {
-		return ImageIO.read(new URL(baseURL + "/res/" + filename));
+		// return ImageIO.read(new URL(baseURL + "/res/" + filename));
+		// String path = (new File("res/" + "omg.jpg")).toURI().toString().replace("file:/", "file:///");
+		return ImageIO.read((new File(filename)).toURI().toURL());
 	}
 	
 	/*********************************************/
