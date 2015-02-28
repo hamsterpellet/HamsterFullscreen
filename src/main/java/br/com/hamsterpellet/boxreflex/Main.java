@@ -39,7 +39,7 @@ public final class Main {
 		try {
 			Main.init();
 		} catch (/*MalformedURLException |*/ IOException e) {
-			String error = "Alguns arquivos necessários não foram encontrados! A mensagem de erro foi:";
+			String error = "Alguns arquivos necessários não foram encontrados! A mensagem de erro foi:\n\n";
 			error += e.toString();
 			JOptionPane.showMessageDialog(null, error);
 			return;
@@ -75,17 +75,17 @@ public final class Main {
 		final ScreenPage optionsPage = new ScreenPage(handler);
 		
 		/* CREATE FIRST PAGE */ {
-			ScreenImageRect title = ScreenImageRect.create(null, "res/saturamini.png", true);
+			ScreenImageRect title = ScreenImageRect.create(null, "images/saturamini.png", true);
 			title.setPosition(OneDimPosition.CENTER, OneDimPosition.BEGIN);
 			title.move(0, 0.05);
 			firstPage.addRegion(title);
 			
 			ScreenImageRect[] menu = new ScreenImageRect[4];
 			String[] menuSrcs = new String[4];
-			menuSrcs[0] = "res/iniciar.png";
-			menuSrcs[1] = "res/continuarjogosalvo.png";
-			menuSrcs[2] = "res/opcoes.png";
-			menuSrcs[3] = "res/sair.png";
+			menuSrcs[0] = "images/iniciar.png";
+			menuSrcs[1] = "images/continuarjogosalvo.png";
+			menuSrcs[2] = "images/opcoes.png";
+			menuSrcs[3] = "images/sair.png";
 			for (int i = 0; i < 4; i++) {
 				menu[i] = ScreenImageRect.create(null, menuSrcs[i]);
 				menu[i].setFillColor(Color.RED, MouseStatus.NORMAL);
@@ -118,17 +118,17 @@ public final class Main {
 			 * I preferred to separate it for clarity and avoid messing up..
 			 * For example, if I move it here, it will move there too :P
 			 */
-			ScreenImageRect title = ScreenImageRect.create(null, "res/saturamini.png", true);
+			ScreenImageRect title = ScreenImageRect.create(null, "images/saturamini.png", true);
 			title.setPosition(OneDimPosition.CENTER, OneDimPosition.BEGIN);
 			title.move(0, 0.05);
 			optionsPage.addRegion(title);
 			
 			ScreenImageRect[] menu = new ScreenImageRect[4];
 			String[] menuSrcs = new String[4];
-			menuSrcs[0] = "res/notyet.png";
-			menuSrcs[1] = "res/calma.png";
-			menuSrcs[2] = "res/espera.png";
-			menuSrcs[3] = "res/voltar.png";
+			menuSrcs[0] = "images/notyet.png";
+			menuSrcs[1] = "images/calma.png";
+			menuSrcs[2] = "images/espera.png";
+			menuSrcs[3] = "images/voltar.png";
 			for (int i = 0; i < 4; i++) {
 				menu[i] = ScreenImageRect.create(null, menuSrcs[i]);
 				menu[i].setFillColor(Color.RED, MouseStatus.NORMAL);
