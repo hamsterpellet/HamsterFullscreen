@@ -2,12 +2,9 @@ package br.com.hamsterpellet.boxreflex;
 
 
 import java.awt.Color;
-import java.awt.Cursor;
 import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.event.KeyEvent;
-import java.io.IOException;
-import java.net.MalformedURLException;
 
 import javax.swing.JOptionPane;
 
@@ -15,9 +12,10 @@ import br.com.hamsterpellet.fullscreen.GamePanel;
 import br.com.hamsterpellet.fullscreen.ScreenPage;
 import br.com.hamsterpellet.fullscreen.ScreenPage.OneDimPosition;
 import br.com.hamsterpellet.fullscreen.UserEventHandler;
+import br.com.hamsterpellet.fullscreen.ScreenPage.MouseStatus;
 import br.com.hamsterpellet.fullscreen.region.Debugger;
 import br.com.hamsterpellet.fullscreen.region.ScreenColoredCursoredRect;
-import br.com.hamsterpellet.fullscreen.region.ScreenImageRect;
+import br.com.hamsterpellet.fullscreen.region.ScreenRect;
 
 public class MyUserEventHandler extends UserEventHandler {
 
@@ -25,6 +23,8 @@ public class MyUserEventHandler extends UserEventHandler {
 	/** #### PUBLIC STATIC VOID MAIN ### **/
 	
 	public static void main(String[] args) {
+		//JOptionPane.showMessageDialog(null, "NEEDS TO FIX ROOT - ROOT SCREEN RECT IS A PROPERTY OF SCREENPAGE!");
+		//if (Math.random() < 2) return;
 		JOptionPane.showMessageDialog(null, "Pressione OK quando estiver pronto para entrar no modo fullscreen.");
 		try {
 			final MyUserEventHandler handler = new MyUserEventHandler();
@@ -47,39 +47,23 @@ public class MyUserEventHandler extends UserEventHandler {
 			
 			ScreenPage index = new ScreenPage(handler);
 			
-			ScreenImageRect exitButton = ScreenImageRect.create(null, "alea_jacta_est.bmp", true);
-			exitButton.setMouseClickListener(new Runnable() {
-				@Override
-				public void run() {
-					GamePanel.exit();
+			ScreenColoredCursoredRect[][] cells = new ScreenColoredCursoredRect[5][5];
+			for (int i = 0; i < 5; i++) {
+				for (int j = 0; j < 5; j++) {
+					cells[i][j] = ScreenColoredCursoredRect.create(0.1, 0.1, null, Color.BLUE, Color.YELLOW, Color.RED);
+					cells[i][j].setFillColor(new Color(25*(i+j), 25*(i+j), 25*(i+j)));
+					cells[i][j].setFillColor(new Color(255, 0, 0), MouseStatus.HOVER);
 				}
-			});
-			exitButton.setHoverCursor(Cursor.HAND_CURSOR);
-			exitButton.setPosition(OneDimPosition.BEFORE_CENTER, OneDimPosition.BEFORE_CENTER);
-			index.addRegion(exitButton);
+			}
+			ScreenRect aaa = ScreenColoredCursoredRect.create(0.25, 0.1, null, Color.BLUE, Color.YELLOW, Color.YELLOW);
+			ScreenRect bbb = ScreenColoredCursoredRect.create(0.25, 0.1, null, Color.RED, Color.YELLOW, Color.YELLOW);
+			ScreenRect ccc = ScreenColoredCursoredRect.create(0.25, 0.1, null, Color.GREEN, Color.YELLOW, Color.YELLOW);
+			ScreenRect ddd = ScreenColoredCursoredRect.create(0.25, 0.1, null, Color.CYAN, Color.YELLOW, Color.YELLOW);
+			ScreenRect eee = ScreenColoredCursoredRect.create(0.25, 0.1, null, Color.ORANGE, Color.YELLOW, Color.YELLOW);
 			
-			ScreenImageRect exitButton2 = ScreenImageRect.create(null, "alea_jacta_est.bmp", true);
-			exitButton2.setHoverCursor(Cursor.CROSSHAIR_CURSOR);
-			exitButton2.setPosition(OneDimPosition.AFTER_CENTER, OneDimPosition.AFTER_CENTER);
-			index.addRegion(exitButton2);
-	
-			final ScreenPage newp = new ScreenPage(handler);
-			ScreenColoredCursoredRect tt = ScreenColoredCursoredRect.create(0.5, 0.5, null, Color.BLUE, Color.GREEN, Color.WHITE);
-			tt.setPosition(0.1, 0.1);
-			tt.setMouseClickListener(new Runnable() {
-				@Override
-				public void run() {
-					handler.getDebugger().addMessage("YAYY", 3);
-				}
-			});
-			newp.addRegion(tt);
-
-			exitButton2.setMouseClickListener(new Runnable() {
-				@Override
-				public void run() {
-					GamePanel.switchPage(newp);
-				}
-			});
+			ScreenRect table = ScreenRect.makeColumnTable(null, aaa, bbb, ccc, ddd, eee);
+			index.addRegion(table);
+			table.setPosition(OneDimPosition.CENTER, OneDimPosition.CENTER);
 			
 			GamePanel.launch(index);
 			
@@ -87,10 +71,6 @@ public class MyUserEventHandler extends UserEventHandler {
 			//   because it might bug the focus of the fullscreened window
 		} catch (GamePanel.UnableToFullscreenException e) {
 			JOptionPane.showMessageDialog(null, "Não foi possível entrar em modo fullscreen!");
-		} catch (MalformedURLException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
 		}
 		// please avoid doing anything after calling launchGame()
 		//   because it might bug the focus of the fullscreened window

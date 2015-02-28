@@ -2,6 +2,7 @@ package br.com.hamsterpellet.fullscreen.region;
 
 import java.awt.Graphics2D;
 import java.awt.Point;
+import java.util.ArrayList;
 
 import br.com.hamsterpellet.fullscreen.GamePanel;
 import br.com.hamsterpellet.fullscreen.ScreenPage.MouseStatus;
@@ -22,15 +23,50 @@ public abstract class ScreenRegion {
 		return obj instanceof ScreenRegion && id == ((ScreenRegion)obj).id;
 	}
 	
+	/** FAMILY STUFF **/
+	
+	private final ScreenRegion parent;
+	protected final ArrayList<ScreenRegion> children;
+	
+	private static boolean rootAlreadyCreated;
+	private static final ScreenRect root;
+	static {
+		rootAlreadyCreated = false;
+		root = new ScreenRect(1, 1, null);
+		root.setPosition(0, 0);
+		rootAlreadyCreated = true;
+	}
+	public boolean isRoot() {
+		return this == root;
+	}
+	
+	public final void addChild(ScreenRegion child) {
+		children.add(child);
+	}
+	public final ArrayList<ScreenRegion> getChildren() {
+		return children;
+	}
+	public final ScreenRegion getParent() {
+		if (this == root) throw new RuntimeException("Do NOT ask for the root's parent!");
+		return parent;
+	}
+	
 	/** BASE STUFF **/
 	
 	private static int idCounter = 0;
 	public final int id;
 	protected MouseStatus currentMouseStatus;
 	
-	protected ScreenRegion() {
+	protected ScreenRegion(ScreenRegion parent) {
 		id = idCounter++;
 		currentMouseStatus = MouseStatus.NORMAL;
+		
+		if (rootAlreadyCreated && parent == null) {
+			this.parent = root;
+		} else {
+			this.parent = parent;
+		}
+		this.children = new ArrayList<ScreenRegion>();
 	}
 	
 	public final boolean isHovered() {
@@ -48,7 +84,11 @@ public abstract class ScreenRegion {
 	
 	public abstract boolean contains(double x, double y);
 	
-	public void paint(Graphics2D g) {}
+	public void paint(Graphics2D g) {
+		for (ScreenRegion child : children) {
+			child.paint(g);
+		}
+	}
 	
 	/** MOUSE INTERACTION STUFF **/
 	
@@ -100,9 +140,10 @@ public abstract class ScreenRegion {
 		currentMouseStatus = MouseStatus.HOVER;
 		onMouseUp();
 		if (onMouseUpListener != null) onMouseUpListener.run();
+		
 		if (isThisAClick) {
 			onMouseClick();
-			if (onMouseClickListener != null) onMouseClickListener.run();			
+			if (onMouseClickListener != null) onMouseClickListener.run();
 		}
 	}
 	public void onMouseUp() {};

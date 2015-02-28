@@ -32,13 +32,25 @@ public final class ScreenPage {
 		regionArray = new ScreenRegion[0];
 	}
 	
-	public void addRegion(ScreenRegion r) {
+	private void addRegionWithoutUpdatingArray(ScreenRegion r) {
 		regions.add(r);
+		for (ScreenRegion child : r.getChildren()) {
+			addRegionWithoutUpdatingArray(child);
+		}
+	}
+	public void addRegion(ScreenRegion r) {
+		addRegionWithoutUpdatingArray(r);
 		regionArray = regions.toArray(regionArray);
 	}
 	
-	public void removeRegion(ScreenRegion r) {
+	private void removeRegionWithoutUpdatingArray(ScreenRegion r) {
 		regions.remove(r);
+		for (ScreenRegion child : r.getChildren()) {
+			removeRegionWithoutUpdatingArray(child);
+		}
+	}
+	public void removeRegion(ScreenRegion r) {
+		removeRegionWithoutUpdatingArray(r);
 		regionArray = regions.toArray(regionArray);
 	}
 	

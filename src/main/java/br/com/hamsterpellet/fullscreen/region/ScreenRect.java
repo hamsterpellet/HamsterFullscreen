@@ -1,6 +1,6 @@
 package br.com.hamsterpellet.fullscreen.region;
 
-import java.util.ArrayList;
+import java.awt.Graphics2D;
 
 import br.com.hamsterpellet.fullscreen.GamePanel;
 import br.com.hamsterpellet.fullscreen.ScreenPage.Direction;
@@ -16,20 +16,9 @@ public class ScreenRect extends ScreenRegion {
 	protected final double width;
 	protected final double height;
 	
-	private final ScreenRect parent;
-	protected final ArrayList<ScreenRect> children;
-	
-	private static boolean rootAlreadyCreated;
-	private static final ScreenRect root;
-	static {
-		rootAlreadyCreated = false;
-		root = new ScreenRect(1, 1, null);
-		root.setPosition(0, 0);
-		rootAlreadyCreated = true;
-	}
-	
 	protected ScreenRect(double width, double height, ScreenRect parent) {
 		/** NEVER CALL THIS, CALL FACTORY() INSTEAD **/
+		super(parent);
 		
 		// pass NULL as parent for the parent to be auto-set to the root.
 		if (width < 0 || width > 1 || height < 0 || height > 1) {
@@ -37,16 +26,10 @@ public class ScreenRect extends ScreenRegion {
 		}
 		this.width = width;
 		this.height = height;
-		if (rootAlreadyCreated && parent == null) {
-			this.parent = root;
-		} else {
-			this.parent = parent;
-		}
-		this.children = new ArrayList<ScreenRect>();
 	}
 	private static ScreenRect factory(double width, double height, ScreenRect parent) {
 		ScreenRect r = new ScreenRect(width, height, parent);
-		r.parent.addChild(r);
+		r.getParent().addChild(r);
 		return r;
 	}
 	
@@ -59,24 +42,16 @@ public class ScreenRect extends ScreenRegion {
 	}
 	
 	/** FAMILY STUFF **/
-	
-	public final void addChild(ScreenRect child) {
-		children.add(child);
-	}
-	public final ScreenRect getParent() {
-		if (this == root) throw new RuntimeException("Do NOT ask for the root's parent!");
-		return parent;
-	}
 
-	/*
-	public static final ScreenRect makeTable(ScreenRect[][] cells, int screenWidth, int screenHeight, ScreenRect parent) {
+	public static final ScreenRect makeTable(ScreenRect parentForContainer, ScreenRect[][] cells) {
+		// CELLS IN THE SAME ROW MUST HAVE THE SAME HEIGHT, OTHERWISE ILLEGALARGUMENTEXCEPTION
 		cells[0][0].setPosition(0, 0);
-		int totalHeight = 0;
-		int totalWidth = 0;
+		double totalHeight = 0;
+		double totalWidth = 0;
 		for (int i = 0; i < cells.length; i++) {
 			if (i != 0) cells[i][0].setPosition(cells[i-1][0], RelativePos.BELOW);
 			totalHeight += cells[i][0].height;
-			int thisRowWidth = cells[i][0].width;
+			double thisRowWidth = cells[i][0].width;
 			for (int j = 1; j < cells[i].length; j++) {
 				if (cells[i][j].height != cells[i][0].height) {
 					throw new IllegalArgumentException("Cells from the same row must have equal heights");
@@ -84,9 +59,9 @@ public class ScreenRect extends ScreenRegion {
 				cells[i][j].setPosition(cells[i][j-1], RelativePos.RIGHT);
 				thisRowWidth += cells[i][j].width;
 			}
-			if (thisRowWidth > totalWidth) totalWidth = thisRowWidth;			
+			if (thisRowWidth > totalWidth) totalWidth = thisRowWidth;
 		}
-		ScreenRect container = ScreenRect.create(screenWidth, screenHeight, totalWidth, totalHeight, parent);
+		ScreenRect container = ScreenRect.create(totalWidth, totalHeight, parentForContainer);
 		for (int i = 0; i < cells.length; i++) {
 			for (int j = 0; j < cells[i].length; j++) {
 				container.addChild(cells[i][j]);
@@ -94,13 +69,34 @@ public class ScreenRect extends ScreenRegion {
 		}
 		return container;
 	}
-	*/
 	
+	public static final ScreenRect makeColumnTable(ScreenRect parentForContainer, ScreenRect... cells) {
+		ScreenRect[][] tableCells = new ScreenRect[cells.length][1];
+		for (int i = 0; i < cells.length; i++) {
+			tableCells[i][0] = cells[i];
+		}
+		return makeTable(parentForContainer, tableCells);
+	}
+	
+	public static final ScreenRect makeRowTable(ScreenRect parentForContainer, ScreenRect... cells) {
+		ScreenRect[][] tableCells = new ScreenRect[1][cells.length];
+		for (int i = 0; i < cells.length; i++) {
+			tableCells[0][i] = cells[i];
+		}
+		return makeTable(parentForContainer, tableCells);
+	}
+	
+		
 	/** MOVE & SETPOS STUFF **/
 	
 	private final boolean isOutOfParent() {
-		if (relativeUpperX < 0 || relativeUpperY < 0) return true;
-		return relativeUpperX + width > parent.width || relativeUpperY + height > parent.height;
+		try {
+			if (relativeUpperX < 0 || relativeUpperY < 0) return true;
+			if (relativeUpperX + width > ((ScreenRect)getParent()).width) return true;
+			return relativeUpperY + height > ((ScreenRect)getParent()).height;
+		} catch (ClassCastException e) {
+			return true;
+		}
 	}
 	
 	public final void move(double deltaX, double deltaY) {
@@ -108,8 +104,10 @@ public class ScreenRect extends ScreenRegion {
 		relativeUpperX += deltaX;
 		relativeUpperY += deltaY;
 		if (isOutOfParent()) throw new OutOfParentException();
-		for (ScreenRect child : children) {
-			child.move(deltaX, deltaY);
+		for (ScreenRegion child : children) {
+			if (child instanceof ScreenRect) {
+				((ScreenRect) child).move(deltaX, deltaY);
+			}
 		}
 	}
 	
@@ -159,13 +157,13 @@ public class ScreenRect extends ScreenRegion {
 		return relativeUpperY;
 	}
 	
-	public final double getUpperX() {
-		if (parent == null) return relativeUpperX;
-		return parent.getUpperX() + relativeUpperX;
+	public final double getUpperX() throws ClassCastException {
+		if (isRoot()) return relativeUpperX; // which is probably be zero I think
+		return ((ScreenRect)getParent()).getUpperX() + relativeUpperX;
 	}
-	public final double getUpperY() {
-		if (parent == null) return relativeUpperY;
-		return parent.getUpperY() + relativeUpperY;
+	public final double getUpperY() throws ClassCastException {
+		if (isRoot()) return relativeUpperY; // which is probably be zero I think
+		return ((ScreenRect)getParent()).getUpperY() + relativeUpperY;
 	}
 	
 	public final int getUpperXOnScreen() {
@@ -194,5 +192,10 @@ public class ScreenRect extends ScreenRegion {
 	}
 	public final int getLowerYOnScreen() {
 		return getUpperYOnScreen() + getHeightOnScreen();
+	}
+	
+	@Override
+	public void paint(Graphics2D g) {
+		super.paint(g);
 	}
 }
